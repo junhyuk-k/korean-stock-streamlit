@@ -1572,7 +1572,7 @@ with tab3:
                     response = requests.get(
                         url,
                         params=params,
-                        timeout=10
+                        timeout=3
                     )
 
                     result = response.json()
