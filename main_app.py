@@ -51,32 +51,48 @@ def load_dart_corp_codes():
         "crtfc_key": dart_api_key
     }
 
-    response = requests.get(
-        url,
-        params=params,
-        timeout=20
-    )
+    try:
+        response = requests.get(
+            url,
+            params=params,
+            timeout=5
+        )
 
-    response.raise_for_status()
+        response.raise_for_status()
 
-    with zipfile.ZipFile(io.BytesIO(response.content)) as zip_file:
-        xml_data = zip_file.read("CORPCODE.xml")
+        with zipfile.ZipFile(io.BytesIO(response.content)) as zip_file:
+            xml_data = zip_file.read("CORPCODE.xml")
 
-    root = ET.fromstring(xml_data)
+        root = ET.fromstring(xml_data)
 
-    corp_list = []
+        corp_list = []
 
-    for item in root.findall("list"):
-        stock_code_value = item.findtext("stock_code", "").strip()
+        for item in root.findall("list"):
+            stock_code_value = item.findtext("stock_code", "").strip()
 
-        if stock_code_value:
-            corp_list.append({
-                "corp_code": item.findtext("corp_code", "").strip(),
-                "corp_name": item.findtext("corp_name", "").strip(),
-                "stock_code": stock_code_value
-            })
+            if stock_code_value:
+                corp_list.append({
+                    "corp_code": item.findtext("corp_code", "").strip(),
+                    "corp_name": item.findtext("corp_name", "").strip(),
+                    "stock_code": stock_code_value
+                })
 
-    return pd.DataFrame(corp_list)
+        return pd.DataFrame(corp_list)
+
+    except requests.exceptions.Timeout:
+        return pd.DataFrame(
+            columns=["corp_code", "corp_name", "stock_code"]
+        )
+
+    except requests.exceptions.RequestException:
+        return pd.DataFrame(
+            columns=["corp_code", "corp_name", "stock_code"]
+        )
+
+    except Exception:
+        return pd.DataFrame(
+            columns=["corp_code", "corp_name", "stock_code"]
+        )
 
 def analyze_disclosure(title):
     title = str(title).replace(" ", "")
