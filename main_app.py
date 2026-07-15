@@ -1201,9 +1201,22 @@ with tab2:
                 else:
                     st.error(result.get("message"))
 
-            except Exception as error:
+            except requests.exceptions.Timeout:
                 st.error(
-                    f"공시를 불러오지 못했습니다: {error}"
+                    "OpenDART 서버 연결 시간이 초과되었습니다. "
+                    "잠시 후 다시 시도해주세요."
+                )
+
+            except requests.exceptions.RequestException:
+                st.error(
+                    "OpenDART 서버와 통신하지 못했습니다. "
+                    "인터넷 연결 또는 서버 상태를 확인해주세요."
+                )
+
+            except Exception:
+                st.error(
+                    "공시 조회 중 오류가 발생했습니다. "
+                    "잠시 후 다시 시도해주세요."
                 )
 
     if "dart_data" in st.session_state:
