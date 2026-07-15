@@ -1,0 +1,6 @@
+streamlit
+pandas
+requests
+FinanceDataReader
+plotly
+python-dotenv

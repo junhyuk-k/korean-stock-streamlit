@@ -1,0 +1,16 @@
+.env
+__pycache__/
+*.pyc
+
+main_app_backup_*.py
+watchlist_history_backup_*.csv
+
+.vscode/
+
+# 이전 시험용 Python 파일
+app.py
+dart_app.py
+dart_test.py
+
+# Windows 실행·종료·백업 파일
+*.bat
