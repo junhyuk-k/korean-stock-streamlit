@@ -1,6 +1,6 @@
 streamlit
 pandas
 requests
-FinanceDataReader
+finance-datareader
 plotly
 python-dotenv
