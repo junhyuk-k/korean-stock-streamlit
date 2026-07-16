@@ -1941,6 +1941,10 @@ with tab3:
                 "실시간 차트": st.column_config.LinkColumn(
                     "실시간 차트",
                     display_text="차트 보기"
+                ),
+                "수급 반영 점수": st.column_config.NumberColumn(
+                    "최종 추천 점수",
+                    format="%d점"
                 )
             }
         )
@@ -1974,7 +1978,7 @@ with tab3:
             detail_df["종목명"] == selected_candidate
         ].iloc[0]
 
-        col_a, col_b, col_c, col_d = st.columns(4)
+        col_a, col_b, col_c, col_d, col_e = st.columns(5)
 
         col_a.metric(
             "종목코드",
@@ -1992,8 +1996,13 @@ with tab3:
         )
 
         col_d.metric(
-            "종합 점수",
+            "차트·공시 종합 점수",
             f"{selected_row['종합 점수']}점"
+        )
+
+        col_e.metric(
+            "최종 추천 점수",
+            f"{selected_row['수급 반영 점수']}점"
         )
 
         st.write(
