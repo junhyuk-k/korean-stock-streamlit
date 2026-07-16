@@ -1917,6 +1917,20 @@ with tab3:
                 candidate_df["수급 반영 점수"].apply(make_grade)
             )
 
+            def make_short_opinion(grade):
+                if grade == "A":
+                    return "최우선 검토"
+                elif grade == "B":
+                    return "추가 확인"
+                elif grade == "C":
+                    return "신중 관찰"
+                else:
+                    return "우선순위 낮음"
+
+            candidate_df["최종 추천 의견"] = (
+                candidate_df["최종 추천 등급"].apply(make_short_opinion)
+            )
+
             candidate_df = candidate_df.sort_values(
                 by=[
                     "수급 반영 점수",
