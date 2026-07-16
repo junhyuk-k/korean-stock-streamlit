@@ -1150,6 +1150,38 @@ with tab1:
 with tab2:
     st.subheader("OpenDART 전체 공시 분석")
 
+    if st.button("OpenDART 연결 진단", key="dart_connection_test"):
+        test_results = []
+
+        try:
+            homepage_response = requests.get(
+                "https://opendart.fss.or.kr",
+                timeout=10
+            )
+            test_results.append(
+                f"홈페이지 연결: 성공 ({homepage_response.status_code})"
+            )
+        except requests.exceptions.Timeout:
+            test_results.append("홈페이지 연결: 시간 초과")
+        except requests.exceptions.RequestException:
+            test_results.append("홈페이지 연결: 실패")
+
+        try:
+            api_response = requests.get(
+                "https://opendart.fss.or.kr/api/list.json",
+                timeout=10
+            )
+            test_results.append(
+                f"API 주소 연결: 성공 ({api_response.status_code})"
+            )
+        except requests.exceptions.Timeout:
+            test_results.append("API 주소 연결: 시간 초과")
+        except requests.exceptions.RequestException:
+            test_results.append("API 주소 연결: 실패")
+
+        for result_text in test_results:
+            st.write(result_text)
+
     days = st.selectbox(
         "최근 며칠간 공시를 볼까요?",
         [1, 3, 7, 14],
@@ -1664,28 +1696,54 @@ with tab3:
                 make_status,
                 axis=1
             )
+            def make_reason(row):
+                reasons = []
 
-            candidate_df["실시간 차트"] = (
-                "https://finance.naver.com/item/main.naver?code="
-                + candidate_df["종목코드"].astype(str).str.zfill(6)
-            )
+                if row["차트 점수"] >= 80:
+                    reasons.append("차트 조건 강함")
+                elif row["차트 점수"] >= 60:
+                    reasons.append("차트 조건 양호")
 
-            candidate_df = candidate_df.sort_values(
-                by=["종합 점수", "차트 점수", "거래량 배수"],
-                ascending=False
-            )
+                if row["공시 점수"] >= 70:
+                    reasons.append("긍정 공시 확인")
+                elif row["공시 점수"] < 40:
+                    reasons.append("공시 위험 신호 존재")
+                else:
+                    reasons.append("공시 중립")
 
-            candidate_df = candidate_df.head(maximum_results)
+                if row["거래량 배수"] >= 2:
+                    reasons.append("거래량 크게 증가")
+                elif row["거래량 배수"] >= 1:
+                    reasons.append("거래량 조건 충족")
 
-            st.session_state["candidate_results"] = candidate_df.copy()
+                return " · ".join(reasons)
 
-        else:
-            st.session_state.pop("candidate_results", None)
+        candidate_df["상승 근거"] = candidate_df.apply(
+            make_reason,
+            axis=1
+        )
 
-            st.warning(
-                "현재 조건을 통과한 종목이 없습니다. "
-                "조건을 조금 낮춰서 다시 검색해보세요."
-            )
+        candidate_df["실시간 차트"] = (
+            "https://finance.naver.com/item/main.naver?code="
+            + candidate_df["종목코드"].astype(str).str.zfill(6)
+        )
+
+        candidate_df = candidate_df.sort_values(
+            by=["종합 점수", "차트 점수", "거래량 배수"],
+            ascending=False
+        )
+
+        candidate_df = candidate_df.head(maximum_results)
+
+        st.session_state["candidate_results"] = candidate_df.copy()
+
+    else:
+        st.session_state.pop("candidate_results", None)
+
+        st.warning(
+            "현재 조건을 통과한 종목이 없습니다. "
+            "조건을 조금 낮춰서 다시 검색해보세요."
+        )
 
     if "candidate_results" in st.session_state:
         candidate_df = st.session_state["candidate_results"].copy()
