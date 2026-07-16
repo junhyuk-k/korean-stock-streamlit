@@ -2013,6 +2013,23 @@ with tab3:
             f"최종 추천 등급: **{selected_row['최종 추천 등급']}**"
         )
 
+        final_grade = selected_row["최종 추천 등급"]
+        final_score = selected_row["수급 반영 점수"]
+
+        if final_grade == "A":
+            final_opinion = "차트·공시·수급이 전반적으로 강한 최우선 검토 후보"
+        elif final_grade == "B":
+            final_opinion = "긍정 신호가 우세하지만 추가 확인이 필요한 후보"
+        elif final_grade == "C":
+            final_opinion = "일부 강점은 있으나 신중한 관찰이 필요한 후보"
+        else:
+            final_opinion = "현재 조건에서는 우선순위가 낮은 후보"
+
+        st.write(
+            f"최종 추천 의견: **{final_grade}등급 · "
+            f"{final_score}점 · {final_opinion}**"
+        )
+
         st.write(
             f"상태 요약: **{selected_row['상태 요약']}**"
         )
