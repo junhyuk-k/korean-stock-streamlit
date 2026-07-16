@@ -1908,6 +1908,22 @@ with tab3:
 
             candidate_df["수급 점수"] = flow_scores
 
+            candidate_df["수급 반영 점수"] = (
+                candidate_df["종합 점수"] * 0.8
+                + candidate_df["수급 점수"] * 0.2
+            ).round().astype(int)
+
+            candidate_df = candidate_df.sort_values(
+                by=[
+                    "수급 반영 점수",
+                    "종합 점수",
+                    "수급 점수",
+                    "차트 점수",
+                    "거래량 배수"
+                ],
+                ascending=False
+            ).reset_index(drop=True)
+
             st.session_state["candidate_results"] = candidate_df.copy()
 
     if "candidate_results" in st.session_state:
