@@ -1706,36 +1706,59 @@ with tab3:
 
                 if row["공시 점수"] >= 70:
                     reasons.append("긍정 공시 확인")
-                elif row["공시 점수"] < 40:
-                    reasons.append("공시 위험 신호 존재")
-                else:
-                    reasons.append("공시 중립")
 
                 if row["거래량 배수"] >= 2:
                     reasons.append("거래량 크게 증가")
                 elif row["거래량 배수"] >= 1:
                     reasons.append("거래량 조건 충족")
 
+                if not reasons:
+                    reasons.append("뚜렷한 상승 근거 부족")
+
                 return " · ".join(reasons)
 
-        candidate_df["상승 근거"] = candidate_df.apply(
-            make_reason,
-            axis=1
-        )
+            def make_warning(row):
+                warnings = []
 
-        candidate_df["실시간 차트"] = (
-            "https://finance.naver.com/item/main.naver?code="
-            + candidate_df["종목코드"].astype(str).str.zfill(6)
-        )
+                if row["공시 점수"] < 40:
+                    warnings.append("공시 위험 신호 존재")
+                elif row["공시 점수"] < 70:
+                    warnings.append("공시 내용 추가 확인 필요")
 
-        candidate_df = candidate_df.sort_values(
-            by=["종합 점수", "차트 점수", "거래량 배수"],
-            ascending=False
-        )
+                if row["차트 점수"] < 60:
+                    warnings.append("차트 흐름 약함")
 
-        candidate_df = candidate_df.head(maximum_results)
+                if row["거래량 배수"] < 1:
+                    warnings.append("거래량 조건 미충족")
 
-        st.session_state["candidate_results"] = candidate_df.copy()
+                if not warnings:
+                    warnings.append("특별한 위험 신호 없음")
+
+                return " · ".join(warnings)
+
+            candidate_df["상승 근거"] = candidate_df.apply(
+                make_reason,
+                axis=1
+            )
+
+            candidate_df["주의 사항"] = candidate_df.apply(
+                make_warning,
+                axis=1
+            )
+
+            candidate_df["실시간 차트"] = (
+                "https://finance.naver.com/item/main.naver?code="
+                + candidate_df["종목코드"].astype(str).str.zfill(6)
+            )
+
+            candidate_df = candidate_df.sort_values(
+                by=["종합 점수", "차트 점수", "거래량 배수"],
+                ascending=False
+            )
+
+            candidate_df = candidate_df.head(maximum_results)
+
+            st.session_state["candidate_results"] = candidate_df.copy()
 
     else:
         st.session_state.pop("candidate_results", None)
