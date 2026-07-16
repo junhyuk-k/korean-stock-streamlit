@@ -126,6 +126,55 @@ def load_investor_trading(ticker):
         )
         return empty_result
 
+def calculate_flow_score(investor_data):
+    flow_score = 50
+
+    if investor_data.get("조회상태") != "정상":
+        return 50
+
+    if investor_data["기관_5일"] > 0:
+        flow_score += 10
+    elif investor_data["기관_5일"] < 0:
+        flow_score -= 10
+
+    if investor_data["외국인_5일"] > 0:
+        flow_score += 10
+    elif investor_data["외국인_5일"] < 0:
+        flow_score -= 10
+
+    if (
+        investor_data["기관_5일"] > 0
+        and investor_data["외국인_5일"] > 0
+    ):
+        flow_score += 10
+
+    if (
+        investor_data["기관_10일"] > 0
+        and investor_data["외국인_10일"] > 0
+    ):
+        flow_score += 10
+
+    if (
+        investor_data["개인_5일"] < 0
+        and (
+            investor_data["기관_5일"] > 0
+            or investor_data["외국인_5일"] > 0
+        )
+    ):
+        flow_score += 5
+
+    if (
+        investor_data["개인_5일"] > 0
+        and investor_data["기관_5일"] < 0
+        and investor_data["외국인_5일"] < 0
+    ):
+        flow_score -= 5
+
+    return max(
+        0,
+        min(100, flow_score)
+    )
+
 @st.cache_data(ttl=86400)
 def load_dart_corp_codes():
     url = "https://opendart.fss.or.kr/api/corpCode.xml"
@@ -1841,6 +1890,24 @@ with tab3:
 
             candidate_df = candidate_df.head(maximum_results)
 
+            flow_scores = []
+
+            with st.spinner(
+                "최종 추천 종목의 외국인·기관·개인 수급을 확인하고 있습니다..."
+            ):
+                for ticker in candidate_df["종목코드"]:
+                    investor_data = load_investor_trading(
+                        str(ticker).zfill(6)
+                    )
+
+                    flow_score = calculate_flow_score(
+                        investor_data
+                    )
+
+                    flow_scores.append(flow_score)
+
+            candidate_df["수급 점수"] = flow_scores
+
             st.session_state["candidate_results"] = candidate_df.copy()
 
     if "candidate_results" in st.session_state:
@@ -1960,6 +2027,71 @@ with tab3:
             flow_col6.metric(
                 "외국인 최근 10일",
                 f"{investor_data['외국인_10일']:+,.1f}억"
+            )
+
+            flow_score = calculate_flow_score(investor_data)
+
+            flow_messages = []
+
+            if investor_data["기관_5일"] > 0:
+                flow_messages.append("기관 순매수")
+            elif investor_data["기관_5일"] < 0:
+                flow_messages.append("기관 순매도")
+
+            if investor_data["외국인_5일"] > 0:
+                flow_messages.append("외국인 순매수")
+            elif investor_data["외국인_5일"] < 0:
+                flow_messages.append("외국인 순매도")
+
+            if (
+                investor_data["기관_5일"] > 0
+                and investor_data["외국인_5일"] > 0
+            ):
+                flow_messages.append("기관·외국인 동반 순매수")
+
+            if (
+                investor_data["기관_10일"] > 0
+                and investor_data["외국인_10일"] > 0
+            ):
+                flow_messages.append("10일 누적 수급 양호")
+
+            if not flow_messages:
+                flow_messages.append("뚜렷한 수급 우위 없음")
+
+            colored_messages = []
+
+            for message in flow_messages:
+                colored_message = (
+                    message
+                    .replace(
+                        "순매수",
+                        "<span style='color:#d32f2f; font-weight:700;'>순매수</span>"
+                    )
+                    .replace(
+                        "순매도",
+                        "<span style='color:#1976d2; font-weight:700;'>순매도</span>"
+                    )
+                )
+                colored_messages.append(colored_message)
+
+            st.markdown(
+                """
+                <div style="
+                    padding: 14px 16px;
+                    background-color: #e8f4ff;
+                    border-radius: 8px;
+                    color: #1f3b53;
+                ">
+                    <strong>수급 해석:</strong>
+                    {}
+                </div>
+                """.format(" · ".join(colored_messages)),
+                unsafe_allow_html=True
+            )
+
+            st.metric(
+                "수급 점수",
+                f"{flow_score}점"
             )
 
         else:
