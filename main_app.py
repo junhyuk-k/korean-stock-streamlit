@@ -1913,6 +1913,10 @@ with tab3:
                 + candidate_df["수급 점수"] * 0.2
             ).round().astype(int)
 
+            candidate_df["최종 추천 등급"] = (
+                candidate_df["수급 반영 점수"].apply(make_grade)
+            )
+
             candidate_df = candidate_df.sort_values(
                 by=[
                     "수급 반영 점수",
