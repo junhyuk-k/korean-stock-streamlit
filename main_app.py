@@ -2010,6 +2010,10 @@ with tab3:
         )
 
         st.write(
+            f"최종 추천 등급: **{selected_row['최종 추천 등급']}**"
+        )
+
+        st.write(
             f"상태 요약: **{selected_row['상태 요약']}**"
         )
 
