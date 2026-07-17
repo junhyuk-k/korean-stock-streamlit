@@ -1597,6 +1597,12 @@ with tab3:
             f"{len(test_stocks)}개를 분석합니다."
         )
 
+        st.session_state["candidate_search_conditions"] = {
+            "분석 시장": market_filter,
+            "분석 시작 위치": start_position,
+            "분석 종목 수": len(test_stocks)
+        }
+
         progress_bar = st.progress(0)
         status_text = st.empty()
 
@@ -1963,6 +1969,19 @@ with tab3:
         if completed_at:
             st.caption(
                 f"추천 분석 완료 시각: {completed_at}"
+            )
+
+        search_conditions = st.session_state.get(
+            "candidate_search_conditions",
+            {}
+        )
+
+        if search_conditions:
+            st.caption(
+                "검색 조건: "
+                f"시장 {search_conditions['분석 시장']} · "
+                f"시작 위치 {search_conditions['분석 시작 위치']} · "
+                f"분석 종목 수 {search_conditions['분석 종목 수']}개"
             )
 
         st.dataframe(
