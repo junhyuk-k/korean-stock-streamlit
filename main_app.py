@@ -2009,6 +2009,26 @@ with tab3:
 
         csv_export_df["분석 완료 시각"] = csv_completed_at
 
+        csv_search_conditions = st.session_state.get(
+            "candidate_search_conditions",
+            {}
+        )
+
+        csv_export_df["분석 시장"] = csv_search_conditions.get(
+            "분석 시장",
+            ""
+        )
+
+        csv_export_df["분석 시작 위치"] = csv_search_conditions.get(
+            "분석 시작 위치",
+            ""
+        )
+
+        csv_export_df["분석 종목 수"] = csv_search_conditions.get(
+            "분석 종목 수",
+            ""
+        )
+
         csv_export_df = csv_export_df.rename(
             columns={
                 "수급 반영 점수": "최종 추천 점수"
