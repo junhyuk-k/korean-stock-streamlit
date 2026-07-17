@@ -1982,13 +1982,37 @@ with tab3:
                datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             )
 
-        else:
-            st.session_state.pop("candidate_results", None)
-            st.session_state.pop("candidate_completed_at", None)
+    else:
+        st.session_state.pop("candidate_results", None)
 
-            st.warning(
-                "현재 조건을 통과한 추천 후보가 없습니다. "
-                "검색 조건을 완화한 뒤 다시 시도해주세요."
+        zero_completed_at = datetime.now().strftime(
+            "%Y-%m-%d %H:%M:%S"
+        )
+
+        st.session_state["candidate_completed_at"] = zero_completed_at
+
+        st.warning(
+            "현재 조건을 통과한 추천 후보가 없습니다. "
+            "검색 조건을 완화한 뒤 다시 시도해주세요."
+        )
+
+        st.caption(
+            f"추천 분석 완료 시각: {zero_completed_at}"
+        )
+
+        zero_search_stats = st.session_state.get(
+            "candidate_search_stats",
+            {}
+        )
+
+        if zero_search_stats:
+            st.caption(
+                "처리 결과: "
+                f"전체 {zero_search_stats['전체 분석 수']}개 · "
+                f"정상 처리 {zero_search_stats['정상 처리 수']}개 · "
+                f"조건 탈락 {zero_search_stats['조건 탈락 수']}개 · "
+                f"오류 {zero_search_stats['오류 수']}개 · "
+                f"추천 후보 {zero_search_stats['추천 후보 수']}개"
             )
 
     if "candidate_results" in st.session_state:
