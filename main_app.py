@@ -1944,12 +1944,26 @@ with tab3:
 
             st.session_state["candidate_results"] = candidate_df.copy()
 
+            st.session_state["candidate_completed_at"] = (
+               datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            )
+
     if "candidate_results" in st.session_state:
         candidate_df = st.session_state["candidate_results"].copy()
 
         st.success(
             f"조건을 통과한 종목 {len(candidate_df)}개를 찾았습니다."
         )
+
+        completed_at = st.session_state.get(
+            "candidate_completed_at",
+            ""
+        )
+
+        if completed_at:
+            st.caption(
+                f"추천 분석 완료 시각: {completed_at}"
+            )
 
         st.dataframe(
             candidate_df,
@@ -1987,7 +2001,7 @@ with tab3:
             encoding="utf-8-sig"
         )
         download_date = datetime.now().strftime("%Y-%m-%d")
-        
+
         st.download_button(
             label="추천 후보 결과 저장",
             data=csv_data,
