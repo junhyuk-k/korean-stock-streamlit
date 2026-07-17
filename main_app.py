@@ -1737,9 +1737,15 @@ with tab3:
         status_text.empty()
         progress_bar.empty()
 
+        condition_fail_count = max(
+            0,
+            success_count - len(candidate_list)
+        )
+
         st.session_state["candidate_search_stats"] = {
             "전체 분석 수": len(test_stocks),
             "정상 처리 수": success_count,
+            "조건 탈락 수": condition_fail_count,
             "오류 수": error_count,
             "추천 후보 수": len(candidate_list)
         }
@@ -2012,6 +2018,7 @@ with tab3:
                 "처리 결과: "
                 f"전체 {search_stats['전체 분석 수']}개 · "
                 f"정상 처리 {search_stats['정상 처리 수']}개 · "
+                f"조건 탈락 {search_stats['조건 탈락 수']}개 · "
                 f"오류 {search_stats['오류 수']}개 · "
                 f"추천 후보 {search_stats['추천 후보 수']}개"
             )
