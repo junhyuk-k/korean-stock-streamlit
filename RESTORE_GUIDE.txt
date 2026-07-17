@@ -1,0 +1,19 @@
+﻿[main_app.py 복구 방법]
+
+1. 프로그램과 Streamlit 서버를 먼저 종료합니다.
+
+2. 현재 문제가 있는 파일을 별도로 보관합니다.
+Copy-Item main_app.py main_app_problem_backup.py
+
+3. 안정화 백업본으로 복구합니다.
+Copy-Item main_app_backup_2026-07-18_004215.py main_app.py -Force
+
+4. 문법검사를 실행합니다.
+python -m py_compile main_app.py
+
+5. 프로그램을 다시 실행하고 화면을 확인합니다.
+
+주의:
+- 복구 전에는 반드시 현재 main_app.py를 별도 파일로 보관합니다.
+- .env 파일은 삭제하거나 덮어쓰지 않습니다.
+- 복구가 정상 확인되기 전에는 GitHub에 push하지 않습니다.
