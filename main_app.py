@@ -1600,7 +1600,13 @@ with tab3:
         st.session_state["candidate_search_conditions"] = {
             "분석 시장": market_filter,
             "분석 시작 위치": start_position,
-            "분석 종목 수": len(test_stocks)
+            "분석 종목 수": len(test_stocks),
+            "5일선 조건": "사용" if use_ma5 else "미사용",
+            "20일선 조건": "사용" if use_ma20 else "미사용",
+            "이동평균선 배열 조건": "사용" if use_ma_order else "미사용",
+            "최소 거래량 배수": minimum_volume_ratio,
+            "최소 차트 점수": minimum_chart_score,
+            "최대 결과 수": maximum_results
         }
 
         progress_bar = st.progress(0)
@@ -1982,6 +1988,16 @@ with tab3:
                 f"시장 {search_conditions['분석 시장']} · "
                 f"시작 위치 {search_conditions['분석 시작 위치']} · "
                 f"분석 종목 수 {search_conditions['분석 종목 수']}개"
+            )
+
+            st.caption(
+                "필터 조건: "
+                f"5일선 {search_conditions['5일선 조건']} · "
+                f"20일선 {search_conditions['20일선 조건']} · "
+                f"이동평균선 배열 {search_conditions['이동평균선 배열 조건']} · "
+                f"최소 거래량 {search_conditions['최소 거래량 배수']:.1f}배 · "
+                f"최소 차트 점수 {search_conditions['최소 차트 점수']}점 · "
+                f"최대 결과 {search_conditions['최대 결과 수']}개"
             )
 
         st.dataframe(
