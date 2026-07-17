@@ -1975,6 +1975,13 @@ with tab3:
             }
         )
 
+        csv_export_df["종목코드"] = (
+            csv_export_df["종목코드"]
+            .astype(str)
+            .str.zfill(6)
+            .apply(lambda code: f'="{code}"')
+        )
+
         csv_data = csv_export_df.to_csv(
             index=False,
             encoding="utf-8-sig"
