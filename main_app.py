@@ -2086,6 +2086,11 @@ with tab3:
             ""
         )
 
+        csv_export_df["조건 탈락 수"] = csv_search_stats.get(
+            "조건 탈락 수",
+            ""
+        )
+
         csv_export_df["오류 수"] = csv_search_stats.get(
             "오류 수",
             ""
@@ -2196,6 +2201,7 @@ with tab3:
             "분석 완료 시각",
             "전체 분석 수",
             "정상 처리 수",
+            "조건 탈락 수",
             "오류 수",
             "추천 후보 수",
             "분석 시장",
