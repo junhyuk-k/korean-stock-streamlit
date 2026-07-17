@@ -1613,6 +1613,8 @@ with tab3:
         status_text = st.empty()
 
         candidate_list = []
+        success_count = 0
+        error_count = 0
 
         for index, (_, stock) in enumerate(test_stocks.iterrows()):
             stock_name_value = stock["Name"]
@@ -1718,7 +1720,11 @@ with tab3:
                         "차트 점수": chart_score
                     })
 
+                success_count += 1
+
             except Exception as error:
+                error_count += 1
+
                 print(
                     f"[추천 검색 오류] "
                     f"{stock_name_value}({stock_code_value}): {error}"
@@ -1730,6 +1736,13 @@ with tab3:
 
         status_text.empty()
         progress_bar.empty()
+
+        st.session_state["candidate_search_stats"] = {
+            "전체 분석 수": len(test_stocks),
+            "정상 처리 수": success_count,
+            "오류 수": error_count,
+            "추천 후보 수": len(candidate_list)
+        }
 
         if candidate_list:
             candidate_df = pd.DataFrame(candidate_list)
@@ -1987,6 +2000,20 @@ with tab3:
         if completed_at:
             st.caption(
                 f"추천 분석 완료 시각: {completed_at}"
+            )
+
+        search_stats = st.session_state.get(
+            "candidate_search_stats",
+            {}
+        )
+
+        if search_stats:
+            st.caption(
+                "처리 결과: "
+                f"전체 {search_stats['전체 분석 수']}개 · "
+                f"정상 처리 {search_stats['정상 처리 수']}개 · "
+                f"오류 {search_stats['오류 수']}개 · "
+                f"추천 후보 {search_stats['추천 후보 수']}개"
             )
 
         search_conditions = st.session_state.get(
