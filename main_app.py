@@ -2064,6 +2064,31 @@ with tab3:
 
         csv_export_df["분석 완료 시각"] = csv_completed_at
 
+        csv_search_stats = st.session_state.get(
+            "candidate_search_stats",
+            {}
+        )
+
+        csv_export_df["전체 분석 수"] = csv_search_stats.get(
+            "전체 분석 수",
+            ""
+        )
+
+        csv_export_df["정상 처리 수"] = csv_search_stats.get(
+            "정상 처리 수",
+            ""
+        )
+
+        csv_export_df["오류 수"] = csv_search_stats.get(
+            "오류 수",
+            ""
+        )
+
+        csv_export_df["추천 후보 수"] = csv_search_stats.get(
+            "추천 후보 수",
+            ""
+        )
+
         csv_search_conditions = st.session_state.get(
             "candidate_search_conditions",
             {}
