@@ -2045,6 +2045,36 @@ with tab3:
             ""
         )
 
+        csv_export_df["5일선 조건"] = csv_search_conditions.get(
+            "5일선 조건",
+            ""
+        )
+
+        csv_export_df["20일선 조건"] = csv_search_conditions.get(
+            "20일선 조건",
+            ""
+        )
+
+        csv_export_df["이동평균선 배열 조건"] = csv_search_conditions.get(
+            "이동평균선 배열 조건",
+            ""
+        )
+
+        csv_export_df["최소 거래량 배수"] = csv_search_conditions.get(
+            "최소 거래량 배수",
+            ""
+        )
+
+        csv_export_df["최소 차트 점수"] = csv_search_conditions.get(
+            "최소 차트 점수",
+            ""
+        )
+
+        csv_export_df["최대 결과 수"] = csv_search_conditions.get(
+            "최대 결과 수",
+            ""
+        )
+
         csv_export_df = csv_export_df.rename(
             columns={
                 "수급 반영 점수": "최종 추천 점수"
