@@ -1986,11 +1986,12 @@ with tab3:
             index=False,
             encoding="utf-8-sig"
         )
-
+        download_date = datetime.now().strftime("%Y-%m-%d")
+        
         st.download_button(
             label="추천 후보 결과 저장",
             data=csv_data,
-            file_name="stock_candidates.csv",
+            file_name=f"stock_candidates_{download_date}.csv",
             mime="text/csv",
             key="candidate_download"
         )
