@@ -2075,6 +2075,20 @@ with tab3:
             ""
         )
 
+        csv_condition_summary = (
+            f"시장 {csv_search_conditions.get('분석 시장', '')} · "
+            f"시작 위치 {csv_search_conditions.get('분석 시작 위치', '')} · "
+            f"분석 종목 수 {csv_search_conditions.get('분석 종목 수', '')}개 · "
+            f"5일선 {csv_search_conditions.get('5일선 조건', '')} · "
+            f"20일선 {csv_search_conditions.get('20일선 조건', '')} · "
+            f"이동평균선 배열 {csv_search_conditions.get('이동평균선 배열 조건', '')} · "
+            f"최소 거래량 {csv_search_conditions.get('최소 거래량 배수', '')}배 · "
+            f"최소 차트 점수 {csv_search_conditions.get('최소 차트 점수', '')}점 · "
+            f"최대 결과 {csv_search_conditions.get('최대 결과 수', '')}개"
+        )
+
+        csv_export_df["분석 조건 요약"] = csv_condition_summary
+
         csv_export_df = csv_export_df.rename(
             columns={
                 "수급 반영 점수": "최종 추천 점수"
