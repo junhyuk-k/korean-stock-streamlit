@@ -2102,6 +2102,55 @@ with tab3:
             .apply(lambda code: f'="{code}"')
         )
 
+        preferred_columns = [
+            "종목명",
+            "시장",
+            "종목코드",
+            "최근 종가",
+            "차트 점수",
+            "공시 점수",
+            "종합 점수",
+            "종합 등급",
+            "수급 점수",
+            "최종 추천 점수",
+            "최종 추천 등급",
+            "최종 추천 의견",
+            "상태 요약",
+            "상승 근거",
+            "주의 사항",
+            "실시간 차트",
+            "5일선",
+            "20일선",
+            "거래량 배수",
+            "분석 완료 시각",
+            "분석 시장",
+            "분석 시작 위치",
+            "분석 종목 수",
+            "5일선 조건",
+            "20일선 조건",
+            "이동평균선 배열 조건",
+            "최소 거래량 배수",
+            "최소 차트 점수",
+            "최대 결과 수",
+            "분석 조건 요약"
+        ]
+
+        existing_preferred_columns = [
+            column
+            for column in preferred_columns
+            if column in csv_export_df.columns
+        ]
+
+        remaining_columns = [
+            column
+            for column in csv_export_df.columns
+            if column not in existing_preferred_columns
+        ]
+
+        csv_export_df = csv_export_df[
+            existing_preferred_columns + remaining_columns
+        ]
+
         csv_data = csv_export_df.to_csv(
             index=False,
             encoding="utf-8-sig"
