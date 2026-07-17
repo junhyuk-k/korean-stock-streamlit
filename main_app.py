@@ -1718,8 +1718,11 @@ with tab3:
                         "차트 점수": chart_score
                     })
 
-            except Exception:
-                pass
+            except Exception as error:
+                print(
+                    f"[추천 검색 오류] "
+                    f"{stock_name_value}({stock_code_value}): {error}"
+                )
 
             progress_bar.progress(
                 int(((index + 1) / len(test_stocks)) * 100)
