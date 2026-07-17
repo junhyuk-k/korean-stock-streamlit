@@ -1967,7 +1967,15 @@ with tab3:
             }
         )
 
-        csv_data = candidate_df.to_csv(
+        csv_export_df = candidate_df.copy()
+
+        csv_export_df = csv_export_df.rename(
+            columns={
+                "수급 반영 점수": "최종 추천 점수"
+            }
+        )
+
+        csv_data = csv_export_df.to_csv(
             index=False,
             encoding="utf-8-sig"
         )
