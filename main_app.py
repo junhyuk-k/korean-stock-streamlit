@@ -1960,6 +1960,15 @@ with tab3:
                datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             )
 
+        else:
+            st.session_state.pop("candidate_results", None)
+            st.session_state.pop("candidate_completed_at", None)
+
+            st.warning(
+                "현재 조건을 통과한 추천 후보가 없습니다. "
+                "검색 조건을 완화한 뒤 다시 시도해주세요."
+            )
+
     if "candidate_results" in st.session_state:
         candidate_df = st.session_state["candidate_results"].copy()
 
