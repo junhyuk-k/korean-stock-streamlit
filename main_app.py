@@ -1983,6 +1983,13 @@ with tab3:
 
         csv_export_df = candidate_df.copy()
 
+        csv_completed_at = st.session_state.get(
+            "candidate_completed_at",
+            ""
+        )
+
+        csv_export_df["분석 완료 시각"] = csv_completed_at
+
         csv_export_df = csv_export_df.rename(
             columns={
                 "수급 반영 점수": "최종 추천 점수"
