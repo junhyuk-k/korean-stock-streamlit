@@ -1744,20 +1744,31 @@ with tab3:
         status_text.empty()
         progress_bar.empty()
 
+        condition_pass_count = len(candidate_list)
+
         condition_fail_count = max(
             0,
-            success_count - len(candidate_list)
+            success_count - condition_pass_count
+        )
+
+        final_display_count = min(
+            condition_pass_count,
+            maximum_results
+        )
+
+        display_limit_excluded_count = max(
+            0,
+            condition_pass_count - final_display_count
         )
 
         st.session_state["candidate_search_stats"] = {
             "전체 분석 수": len(test_stocks),
             "정상 처리 수": success_count,
+            "조건 통과 수": condition_pass_count,
             "조건 탈락 수": condition_fail_count,
+            "표시 제한 제외 수": display_limit_excluded_count,
             "오류 수": error_count,
-            "추천 후보 수": min(
-                len(candidate_list),
-                maximum_results
-            )
+            "추천 후보 수": final_display_count
         }
 
         if candidate_list:
@@ -2052,9 +2063,12 @@ with tab3:
                     "처리 결과: "
                     f"전체 {zero_search_stats['전체 분석 수']}개 · "
                     f"정상 처리 {zero_search_stats['정상 처리 수']}개 · "
+                    f"조건 통과 {zero_search_stats['조건 통과 수']}개 · "
                     f"조건 탈락 {zero_search_stats['조건 탈락 수']}개 · "
+                    f"표시 제한 제외 "
+                    f"{zero_search_stats['표시 제한 제외 수']}개 · "
                     f"오류 {zero_search_stats['오류 수']}개 · "
-                    f"추천 후보 {zero_search_stats['추천 후보 수']}개"
+                    f"최종 표시 {zero_search_stats['추천 후보 수']}개"
                 )
 
     if "candidate_results" in st.session_state:
@@ -2097,9 +2111,12 @@ with tab3:
                 "처리 결과: "
                 f"전체 {search_stats['전체 분석 수']}개 · "
                 f"정상 처리 {search_stats['정상 처리 수']}개 · "
+                f"조건 통과 {search_stats['조건 통과 수']}개 · "
                 f"조건 탈락 {search_stats['조건 탈락 수']}개 · "
+                f"표시 제한 제외 "
+                f"{search_stats['표시 제한 제외 수']}개 · "
                 f"오류 {search_stats['오류 수']}개 · "
-                f"추천 후보 {search_stats['추천 후보 수']}개"
+                f"최종 표시 {search_stats['추천 후보 수']}개"
             )
 
         search_conditions = st.session_state.get(
