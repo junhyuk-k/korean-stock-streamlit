@@ -1491,6 +1491,79 @@ with tab2:
 # 세 번째 탭: 추천 후보 찾기
 # --------------------------------------------------
 with tab3:
+
+    candidate_history_file = "candidate_history.csv"
+
+    if os.path.exists(candidate_history_file):
+        try:
+            candidate_history_df = pd.read_csv(
+                candidate_history_file,
+                dtype={"분석 실행 ID": str, "종목코드": str}
+            )
+
+            history_run_count = (
+                candidate_history_df["분석 실행 ID"]
+                .nunique()
+                if "분석 실행 ID" in candidate_history_df.columns
+                else 0
+            )
+
+            st.info(
+                f"누적 추천 기록: "
+                f"{history_run_count}회 실행 · "
+                f"{len(candidate_history_df)}개 종목"
+            )
+
+            with st.expander("누적 추천 기록 보기"):
+                history_display_columns = [
+                    "분석 실행 ID",
+                    "분석 완료 시각",
+                    "종목명",
+                    "종목코드",
+                    "최종 추천 점수",
+                    "최종 추천 등급",
+                    "최종 추천 의견"
+                ]
+
+                existing_history_columns = [
+                    column
+                    for column in history_display_columns
+                    if column in candidate_history_df.columns
+                ]
+
+                history_display_df = candidate_history_df[
+                    existing_history_columns
+                ].copy()
+
+                if "종목코드" in history_display_df.columns:
+                    history_display_df["종목코드"] = (
+                        history_display_df["종목코드"]
+                        .astype(str)
+                        .str.replace('="', '', regex=False)
+                        .str.replace('"', '', regex=False)
+                        .str.zfill(6)
+                    )
+
+                st.dataframe(
+                    history_display_df,
+                    width="stretch",
+                    hide_index=True
+                )
+
+        except Exception as error:
+            st.warning(
+                "추천 누적 기록을 불러오지 못했습니다."
+            )
+            print(
+                "[추천 누적 기록 불러오기 오류] "
+                f"{error}"
+            )
+
+    else:
+        st.info(
+            "아직 저장된 추천 누적 기록이 없습니다."
+        )
+
     st.subheader("추천 후보 찾기")
 
     st.write("원하는 조건을 직접 설정하세요.")
