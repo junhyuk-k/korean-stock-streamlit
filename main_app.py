@@ -1515,6 +1515,81 @@ with tab3:
             )
 
             with st.expander("누적 추천 기록 보기"):
+                available_run_ids = (
+                    candidate_history_df["분석 실행 ID"]
+                    .dropna()
+                    .astype(str)
+                    .drop_duplicates()
+                    .tolist()
+                    if "분석 실행 ID" in candidate_history_df.columns
+                    else []
+                )
+
+                selected_history_run_id = st.selectbox(
+                    "확인할 분석 실행 ID",
+                    options=["전체"] + available_run_ids,
+                    key="candidate_history_run_filter"
+                )
+
+                if selected_history_run_id == "전체":
+                    filtered_history_df = candidate_history_df.copy()
+                else:
+                    filtered_history_df = candidate_history_df[
+                        candidate_history_df["분석 실행 ID"]
+                        .astype(str)
+                        == selected_history_run_id
+                    ].copy()
+
+                history_stock_count = len(filtered_history_df)
+
+                if (
+                    "최종 추천 점수"
+                    in filtered_history_df.columns
+                ):
+                    history_average_score = (
+                        pd.to_numeric(
+                            filtered_history_df["최종 추천 점수"],
+                            errors="coerce"
+                        )
+                        .mean()
+                    )
+                else:
+                    history_average_score = None
+
+                if (
+                    "최종 추천 등급"
+                    in filtered_history_df.columns
+                ):
+                    history_grade_counts = (
+                        filtered_history_df["최종 추천 등급"]
+                        .astype(str)
+                        .value_counts()
+                    )
+                else:
+                    history_grade_counts = pd.Series(
+                        dtype="int64"
+                    )
+
+                summary_run_label = (
+                    "전체 기록"
+                    if selected_history_run_id == "전체"
+                    else selected_history_run_id
+                )
+
+                st.caption(
+                    f"선택 실행: {summary_run_label} · "
+                    f"종목 수: {history_stock_count}개"
+                )
+
+                if history_average_score is not None:
+                    st.caption(
+                        f"평균 추천 점수: "
+                        f"{history_average_score:.1f}점 · "
+                        f"A등급: {history_grade_counts.get('A', 0)}개 · "
+                        f"B등급: {history_grade_counts.get('B', 0)}개 · "
+                        f"C등급: {history_grade_counts.get('C', 0)}개"
+                    )
+
                 history_display_columns = [
                     "분석 실행 ID",
                     "분석 완료 시각",
@@ -1531,7 +1606,7 @@ with tab3:
                     if column in candidate_history_df.columns
                 ]
 
-                history_display_df = candidate_history_df[
+                history_display_df = filtered_history_df[
                     existing_history_columns
                 ].copy()
 
