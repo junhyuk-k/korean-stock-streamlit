@@ -2025,8 +2025,13 @@ with tab3:
             )
 
             if zero_search_elapsed is not None:
+                zero_elapsed_minutes = int(zero_search_elapsed // 60)
+                zero_elapsed_seconds = zero_search_elapsed % 60
+
                 st.caption(
-                    f"추천 분석 소요시간: {zero_search_elapsed:.1f}초"
+                    "추천 분석 소요시간: "
+                    f"{zero_elapsed_minutes}분 "
+                    f"{zero_elapsed_seconds:.1f}초"
                 )
 
             zero_search_stats = st.session_state.get(
@@ -2066,8 +2071,12 @@ with tab3:
         )
 
         if search_elapsed is not None:
+            elapsed_minutes = int(search_elapsed // 60)
+            elapsed_seconds = search_elapsed % 60
+
             st.caption(
-                f"추천 분석 소요시간: {search_elapsed:.1f}초"
+                "추천 분석 소요시간: "
+                f"{elapsed_minutes}분 {elapsed_seconds:.1f}초"
             )
 
         search_stats = st.session_state.get(
