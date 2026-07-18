@@ -2189,8 +2189,18 @@ with tab3:
             ""
         )
 
+        csv_export_df["조건 통과 수"] = csv_search_stats.get(
+            "조건 통과 수",
+            ""
+        )
+
         csv_export_df["조건 탈락 수"] = csv_search_stats.get(
             "조건 탈락 수",
+            ""
+        )
+
+        csv_export_df["표시 제한 제외 수"] = csv_search_stats.get(
+            "표시 제한 제외 수",
             ""
         )
 
@@ -2305,7 +2315,9 @@ with tab3:
             "분석 소요시간(초)",
             "전체 분석 수",
             "정상 처리 수",
+            "조건 통과 수",
             "조건 탈락 수",
+            "표시 제한 제외 수",
             "오류 수",
             "추천 후보 수",
             "분석 시장",
