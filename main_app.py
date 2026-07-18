@@ -2078,6 +2078,27 @@ with tab3:
             f"조건을 통과한 종목 {len(candidate_df)}개를 찾았습니다."
         )
 
+        result_stats = st.session_state.get(
+            "candidate_search_stats",
+            {}
+        )
+
+        passed_count = result_stats.get(
+            "조건 통과 수",
+            len(candidate_df)
+        )
+
+        displayed_count = result_stats.get(
+            "추천 후보 수",
+            len(candidate_df)
+        )
+
+        if passed_count > displayed_count:
+            st.info(
+                f"조건을 통과한 {passed_count}개 중 "
+                f"상위 {displayed_count}개만 표시합니다."
+            )
+
         completed_at = st.session_state.get(
             "candidate_completed_at",
             ""
