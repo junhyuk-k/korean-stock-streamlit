@@ -1571,6 +1571,11 @@ with tab3:
 
     if st.button("추천 후보 검색 시작", key="candidate_search"):
 
+        st.session_state.pop("candidate_results", None)
+        st.session_state.pop("candidate_completed_at", None)
+        st.session_state.pop("candidate_search_elapsed", None)
+        st.session_state.pop("candidate_search_stats", None)
+
         search_started_at = datetime.now()
 
         if market_filter == "전체":
@@ -1749,7 +1754,10 @@ with tab3:
             "정상 처리 수": success_count,
             "조건 탈락 수": condition_fail_count,
             "오류 수": error_count,
-            "추천 후보 수": len(candidate_list)
+            "추천 후보 수": min(
+                len(candidate_list),
+                maximum_results
+            )
         }
 
         if candidate_list:
