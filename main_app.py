@@ -2133,6 +2133,13 @@ with tab3:
 
         csv_export_df["분석 완료 시각"] = csv_completed_at
 
+        csv_search_elapsed = st.session_state.get(
+            "candidate_search_elapsed",
+            ""
+        )
+
+        csv_export_df["분석 소요시간(초)"] = csv_search_elapsed
+
         csv_search_stats = st.session_state.get(
             "candidate_search_stats",
             {}
@@ -2261,6 +2268,7 @@ with tab3:
             "20일선",
             "거래량 배수",
             "분석 완료 시각",
+            "분석 소요시간(초)",
             "전체 분석 수",
             "정상 처리 수",
             "조건 탈락 수",
