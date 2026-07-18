@@ -1578,6 +1578,13 @@ with tab3:
 
         search_started_at = datetime.now()
 
+        search_run_id = (
+            "RUN-"
+            + search_started_at.strftime("%Y%m%d-%H%M%S")
+        )
+
+        st.session_state["candidate_search_run_id"] = search_run_id
+
         if market_filter == "전체":
             filtered_stocks = stocks.copy()
 
@@ -2035,6 +2042,16 @@ with tab3:
                 "검색 조건을 완화한 뒤 다시 시도해주세요."
             )
 
+            zero_search_run_id = st.session_state.get(
+                "candidate_search_run_id",
+                ""
+            )
+
+            if zero_search_run_id:
+                st.caption(
+                    f"분석 실행 ID: {zero_search_run_id}"
+                )
+
             st.caption(
                 f"추천 분석 완료 시각: {zero_completed_at}"
             )
@@ -2097,6 +2114,16 @@ with tab3:
             st.info(
                 f"조건을 통과한 {passed_count}개 중 "
                 f"상위 {displayed_count}개만 표시합니다."
+            )
+
+        search_run_id = st.session_state.get(
+            "candidate_search_run_id",
+            ""
+        )
+
+        if search_run_id:
+            st.caption(
+                f"분석 실행 ID: {search_run_id}"
             )
 
         completed_at = st.session_state.get(
@@ -2185,7 +2212,12 @@ with tab3:
             "candidate_completed_at",
             ""
         )
+        csv_search_run_id = st.session_state.get(
+            "candidate_search_run_id",
+            ""
+        )
 
+        csv_export_df["분석 실행 ID"] = csv_search_run_id
         csv_export_df["분석 완료 시각"] = csv_completed_at
 
         csv_search_elapsed = st.session_state.get(
@@ -2332,6 +2364,7 @@ with tab3:
             "5일선",
             "20일선",
             "거래량 배수",
+            "분석 실행 ID",
             "분석 완료 시각",
             "분석 소요시간(초)",
             "전체 분석 수",
