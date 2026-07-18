@@ -2408,6 +2408,59 @@ with tab3:
         )
         download_date = datetime.now().strftime("%Y-%m-%d")
 
+        candidate_history_file = "candidate_history.csv"
+
+        saved_run_id = st.session_state.get(
+            "candidate_search_run_id",
+            ""
+        )
+
+        if saved_run_id:
+            history_already_saved = False
+
+            if os.path.exists(candidate_history_file):
+                try:
+                    existing_history_df = pd.read_csv(
+                        candidate_history_file,
+                        dtype={"분석 실행 ID": str}
+                    )
+
+                    if "분석 실행 ID" in existing_history_df.columns:
+                        history_already_saved = (
+                            saved_run_id
+                            in existing_history_df["분석 실행 ID"]
+                            .astype(str)
+                            .values
+                        )
+
+                except Exception as error:
+                    print(
+                        "[추천 기록 확인 오류] "
+                        f"{error}"
+                    )
+
+            if not history_already_saved:
+                try:
+                    csv_export_df.to_csv(
+                        candidate_history_file,
+                        mode="a",
+                        header=not os.path.exists(
+                            candidate_history_file
+                        ),
+                        index=False,
+                        encoding="utf-8-sig"
+                    )
+
+                    st.session_state[
+                        "last_saved_candidate_run_id"
+                    ] = saved_run_id
+
+                except Exception as error:
+                    print(
+                        "[추천 기록 저장 오류] "
+                        f"{error}"
+                    )
+
         st.download_button(
             label="추천 후보 결과 저장",
             data=csv_data,

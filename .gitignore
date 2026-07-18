@@ -14,3 +14,4 @@ dart_test.py
 
 # Windows 실행·종료·백업 파일
 *.bat
+candidate_history.csv
