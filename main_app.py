@@ -1595,6 +1595,7 @@ with tab3:
                     "분석 완료 시각",
                     "종목명",
                     "종목코드",
+                    "최근 종가",
                     "최종 추천 점수",
                     "최종 추천 등급",
                     "최종 추천 의견"
@@ -1619,10 +1620,24 @@ with tab3:
                         .str.zfill(6)
                     )
 
+                if "최근 종가" in history_display_df.columns:
+                    history_display_df["최근 종가"] = (
+                        pd.to_numeric(
+                            history_display_df["최근 종가"],
+                            errors="coerce"
+                        )
+                    )
+
                 st.dataframe(
                     history_display_df,
                     width="stretch",
-                    hide_index=True
+                    hide_index=True,
+                    column_config={
+                        "최근 종가": st.column_config.NumberColumn(
+                            "최근 종가",
+                            format="%,d원"
+                        )
+                    }
                 )
 
         except Exception as error:
