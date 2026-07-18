@@ -1571,6 +1571,8 @@ with tab3:
 
     if st.button("추천 후보 검색 시작", key="candidate_search"):
 
+        search_started_at = datetime.now()
+
         if market_filter == "전체":
             filtered_stocks = stocks.copy()
 
@@ -1982,6 +1984,15 @@ with tab3:
                datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             )
 
+            search_elapsed_seconds = (
+                datetime.now() - search_started_at
+            ).total_seconds()
+
+            st.session_state["candidate_search_elapsed"] = round(
+                search_elapsed_seconds,
+                1
+            )
+
         else:
             st.session_state.pop("candidate_results", None)
 
@@ -1991,6 +2002,15 @@ with tab3:
 
             st.session_state["candidate_completed_at"] = zero_completed_at
 
+            zero_search_elapsed_seconds = (
+                datetime.now() - search_started_at
+            ).total_seconds()
+
+            st.session_state["candidate_search_elapsed"] = round(
+                zero_search_elapsed_seconds,
+                1
+            )
+
             st.warning(
                 "현재 조건을 통과한 추천 후보가 없습니다. "
                 "검색 조건을 완화한 뒤 다시 시도해주세요."
@@ -1999,6 +2019,15 @@ with tab3:
             st.caption(
                 f"추천 분석 완료 시각: {zero_completed_at}"
             )
+
+            zero_search_elapsed = st.session_state.get(
+                "candidate_search_elapsed"
+            )
+
+            if zero_search_elapsed is not None:
+                st.caption(
+                    f"추천 분석 소요시간: {zero_search_elapsed:.1f}초"
+                )
 
             zero_search_stats = st.session_state.get(
                 "candidate_search_stats",
@@ -2030,6 +2059,15 @@ with tab3:
         if completed_at:
             st.caption(
                 f"추천 분석 완료 시각: {completed_at}"
+            )
+
+        search_elapsed = st.session_state.get(
+            "candidate_search_elapsed"
+        )
+
+        if search_elapsed is not None:
+            st.caption(
+                f"추천 분석 소요시간: {search_elapsed:.1f}초"
             )
 
         search_stats = st.session_state.get(
