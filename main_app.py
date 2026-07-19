@@ -1909,6 +1909,16 @@ with tab3:
                                     )
                                 )
 
+                                performance_summary_df[
+                                    "이전 조회 대비(%p)"
+                                ] = (
+                                    performance_summary_df[
+                                        "평균_수익률"
+                                    ]
+                                    .diff()
+                                    .round(2)
+                                )
+
                             else:
                                 performance_summary_df = pd.DataFrame()
 
@@ -1931,6 +1941,12 @@ with tab3:
                                         st.column_config.NumberColumn(
                                             "평균 수익률",
                                             format="%.2f%%"
+                                        )  
+                                    ),
+                                    "이전 조회 대비(%p)": (
+                                        st.column_config.NumberColumn(
+                                            "이전 조회 대비",
+                                            format="%+.2f%%p"
                                         )
                                     ),
                                     "종목_수": (
