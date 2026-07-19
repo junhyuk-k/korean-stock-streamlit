@@ -4,6 +4,7 @@ import pandas as pd
 import streamlit as st
 import FinanceDataReader as fdr
 import plotly.graph_objects as go
+import plotly.express as px
 import io
 import zipfile
 import xml.etree.ElementTree as ET
@@ -2063,6 +2064,51 @@ with tab3:
                                     errors="ignore"
                                 )
                             )
+
+                            performance_chart_df = (
+                                performance_summary_df[
+                                    [
+                                        "성과 조회 시각",
+                                        "평균_수익률"
+                                    ]
+                                ].copy()
+                            )
+
+                            performance_chart_df[
+                                "성과 조회 시각"
+                            ] = pd.to_datetime(
+                                performance_chart_df[
+                                    "성과 조회 시각"
+                                ],
+                                errors="coerce"
+                            )
+
+                            performance_chart_df = (
+                                performance_chart_df.dropna(
+                                    subset=["성과 조회 시각"]
+                                )
+                            )
+
+                            if not performance_chart_df.empty:
+                                performance_chart = px.line(
+                                    performance_chart_df,
+                                    x="성과 조회 시각",
+                                    y="평균_수익률",
+                                    markers=True,
+                                    title="평균 수익률 변화 추이"
+                                )
+
+                                performance_chart.update_layout(
+                                    xaxis_title="성과 조회 시각",
+                                    yaxis_title="평균 수익률(%)",
+                                    hovermode="x unified"
+                                )
+
+                                st.plotly_chart(
+                                    performance_chart,
+                                    width="stretch",
+                                    key="candidate_performance_summary_chart"
+                                )
 
                             st.dataframe(
                                 performance_summary_display_df,
