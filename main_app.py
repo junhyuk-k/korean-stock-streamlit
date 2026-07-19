@@ -1933,6 +1933,113 @@ with tab3:
                             else:
                                 performance_summary_df = pd.DataFrame()
 
+                            performance_rank_df = (
+                                time_filtered_performance_df.copy()
+                            )
+
+                            if (
+                                selected_checked_time == "전체"
+                                and not performance_rank_df.empty
+                                and "성과 조회 시각"
+                                in performance_rank_df.columns
+                            ):
+                                latest_performance_time = (
+                                    performance_rank_df[
+                                        "성과 조회 시각"
+                                    ]
+                                    .dropna()
+                                    .astype(str)
+                                    .max()
+                                )
+
+                                performance_rank_df = (
+                                    performance_rank_df[
+                                        performance_rank_df[
+                                            "성과 조회 시각"
+                                        ].astype(str)
+                                        == latest_performance_time
+                                    ].copy()
+                                )
+
+                            if (
+                                "수익률(%)"
+                                in performance_rank_df.columns
+                            ):
+                                performance_rank_df["수익률(%)"] = (
+                                    pd.to_numeric(
+                                        performance_rank_df["수익률(%)"],
+                                        errors="coerce"
+                                    )
+                                )
+
+                                performance_rank_df = (
+                                    performance_rank_df.dropna(
+                                        subset=["수익률(%)"]
+                                    )
+                                )
+
+                            if not performance_rank_df.empty:
+                                best_performance_row = (
+                                    performance_rank_df.loc[
+                                        performance_rank_df[
+                                            "수익률(%)"
+                                        ].idxmax()
+                                    ]
+                                )
+
+                                worst_performance_row = (
+                                    performance_rank_df.loc[
+                                        performance_rank_df[
+                                            "수익률(%)"
+                                        ].idxmin()
+                                    ]
+                                )
+
+                            else:
+                                best_performance_row = None
+                                worst_performance_row = None
+
+                        if (
+                            best_performance_row is not None
+                            and worst_performance_row is not None
+                        ):
+                            best_stock_name = str(
+                                best_performance_row.get(
+                                    "종목명",
+                                    "-"
+                                )
+                            )
+
+                            best_return_value = float(
+                                best_performance_row.get(
+                                    "수익률(%)",
+                                    0
+                                )
+                            )
+
+                            worst_stock_name = str(
+                                worst_performance_row.get(
+                                    "종목명",
+                                    "-"
+                                )
+                            )
+
+                            worst_return_value = float(
+                                worst_performance_row.get(
+                                    "수익률(%)",
+                                    0
+                                )
+                            )
+
+                        st.caption(
+                            f"최고 수익률 종목: "
+                            f"{best_stock_name} "
+                            f"{best_return_value:+.2f}% · "
+                            f"최저 수익률 종목: "
+                            f"{worst_stock_name} "
+                            f"{worst_return_value:+.2f}%"
+                        )
+
                         if not performance_summary_df.empty:
                             st.caption(
                                 "성과 조회 시각별 평균 수익률 변화"
@@ -1943,7 +2050,7 @@ with tab3:
                                     errors="ignore"
                                 )
                             )
-                            
+
                             st.dataframe(
                                 performance_summary_display_df,
                                 width="stretch",
