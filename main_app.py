@@ -1673,6 +1673,128 @@ with tab3:
                         "%Y-%m-%d %H:%M:%S"
                     )
 
+                    performance_history_file = (
+                        "candidate_performance_history.csv"
+                    )
+
+                    performance_checked_at = st.session_state.get(
+                        "candidate_history_performance_checked_at",
+                        ""
+                    )
+
+                    performance_save_df = (
+                        filtered_history_df.copy()
+                    )
+
+                    if "종목코드" in performance_save_df.columns:
+                        performance_save_df["종목코드"] = (
+                            performance_save_df["종목코드"]
+                            .astype(str)
+                            .str.replace('="', '', regex=False)
+                            .str.replace('"', '', regex=False)
+                            .str.zfill(6)
+                        )
+
+                        performance_save_df["현재가"] = (
+                            performance_save_df["종목코드"]
+                            .map(performance_prices)
+                        )
+
+                        performance_save_df["수익률(%)"] = (
+                            performance_save_df["종목코드"]
+                            .map(performance_returns)
+                        )
+
+                    performance_save_df[
+                        "성과 조회 시각"
+                    ] = performance_checked_at
+
+                    performance_save_columns = [
+                        "분석 실행 ID",
+                        "성과 조회 시각",
+                        "분석 완료 시각",
+                        "종목명",
+                        "종목코드",
+                        "최근 종가",
+                        "현재가",
+                        "수익률(%)",
+                        "최종 추천 점수",
+                        "최종 추천 등급",
+                        "최종 추천 의견"
+                    ]
+
+                    existing_performance_columns = [
+                        column
+                        for column in performance_save_columns
+                        if column in performance_save_df.columns
+                    ]
+
+                    performance_save_df = performance_save_df[
+                        existing_performance_columns
+                    ].copy()
+
+                    performance_already_saved = False
+
+                    if os.path.exists(performance_history_file):
+                        try:
+                            existing_performance_df = pd.read_csv(
+                                performance_history_file,
+                                dtype={
+                                    "분석 실행 ID": str,
+                                    "성과 조회 시각": str
+                                }
+                            )
+
+                            if (
+                                "분석 실행 ID"
+                                in existing_performance_df.columns
+                                and "성과 조회 시각"
+                                in existing_performance_df.columns
+                            ):
+                                duplicate_mask = (
+                                    existing_performance_df[
+                                        "분석 실행 ID"
+                                    ].astype(str)
+                                    == str(selected_history_run_id)
+                                ) & (
+                                    existing_performance_df[
+                                        "성과 조회 시각"
+                                    ].astype(str)
+                                    == str(performance_checked_at)
+                                )
+
+                                performance_already_saved = (
+                                    duplicate_mask.any()
+                                )
+
+                        except Exception as error:
+                            print(
+                                "[성과 기록 확인 오류] "
+                                f"{error}"
+                            )
+
+                    if not performance_already_saved:
+                        try:
+                            performance_save_df.to_csv(
+                                performance_history_file,
+                                mode="a",
+                                header=not os.path.exists(
+                                    performance_history_file
+                                ),
+                                index=False,
+                                encoding="utf-8-sig"
+                            )
+
+                            st.session_state[
+                                "last_saved_performance_checked_at"
+                            ] = performance_checked_at
+
+                        except Exception as error:
+                            print(
+                                "[성과 기록 저장 오류] "
+                                f"{error}"
+                            )
+
                 history_display_columns = [
                     "분석 실행 ID",
                     "분석 완료 시각",
