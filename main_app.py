@@ -1918,6 +1918,17 @@ with tab3:
                                     .diff()
                                     .round(2)
                                 )
+                                performance_summary_df[
+                                    "이전 조회 대비 표시"
+                                ] = performance_summary_df[
+                                    "이전 조회 대비(%p)"
+                                ].apply(
+                                    lambda value: (
+                                        "최초 조회"
+                                        if pd.isna(value)
+                                        else f"{value:+.2f}%p"
+                                    )
+                                )
 
                             else:
                                 performance_summary_df = pd.DataFrame()
@@ -1926,9 +1937,15 @@ with tab3:
                             st.caption(
                                 "성과 조회 시각별 평균 수익률 변화"
                             )
-
+                            performance_summary_display_df = (
+                                performance_summary_df.drop(
+                                    columns=["이전 조회 대비(%p)"],
+                                    errors="ignore"
+                                )
+                            )
+                            
                             st.dataframe(
-                                performance_summary_df,
+                                performance_summary_display_df,
                                 width="stretch",
                                 hide_index=True,
                                 column_config={
@@ -1943,10 +1960,9 @@ with tab3:
                                             format="%.2f%%"
                                         )  
                                     ),
-                                    "이전 조회 대비(%p)": (
-                                        st.column_config.NumberColumn(
-                                            "이전 조회 대비",
-                                            format="%+.2f%%p"
+                                    "이전 조회 대비 표시": (
+                                        st.column_config.TextColumn(
+                                            "이전 조회 대비"
                                         )
                                     ),
                                     "종목_수": (
