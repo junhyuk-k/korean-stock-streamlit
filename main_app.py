@@ -1590,12 +1590,97 @@ with tab3:
                         f"C등급: {history_grade_counts.get('C', 0)}개"
                     )
 
+                refresh_history_performance = st.button(
+                    "선택 기록 현재가·수익률 확인",
+                    key="candidate_history_performance_refresh"
+                )
+
+                if refresh_history_performance:
+                    performance_prices = {}
+                    performance_returns = {}
+
+                    with st.spinner(
+                        "선택한 종목의 현재가와 수익률을 계산하고 있습니다..."
+                    ):
+                        for _, history_row in (
+                            filtered_history_df.iterrows()
+                        ):
+                            stock_code_value = (
+                                str(history_row["종목코드"])
+                                .replace('="', "")
+                                .replace('"', "")
+                                .zfill(6)
+                            )
+
+                            try:
+                                current_stock_data = fdr.DataReader(
+                                    stock_code_value,
+                                    (
+                                        datetime.today()
+                                        - timedelta(days=10)
+                                    ).strftime("%Y-%m-%d")
+                                )
+
+                                if current_stock_data.empty:
+                                    continue
+
+                                current_price_value = int(
+                                    current_stock_data.iloc[-1]["Close"]
+                                )
+
+                                base_price_value = pd.to_numeric(
+                                    history_row.get("최근 종가"),
+                                    errors="coerce"
+                                )
+
+                                performance_prices[
+                                    stock_code_value
+                                ] = current_price_value
+
+                                if (
+                                    pd.notna(base_price_value)
+                                    and base_price_value > 0
+                                ):
+                                    performance_returns[
+                                        stock_code_value
+                                    ] = round(
+                                        (
+                                            current_price_value
+                                            / float(base_price_value)
+                                            - 1
+                                        )
+                                        * 100,
+                                        2
+                                    )
+
+                            except Exception as error:
+                                print(
+                                    "[추천 성과 조회 오류] "
+                                    f"{stock_code_value}: {error}"
+                                )
+
+                    st.session_state[
+                        "candidate_history_current_prices"
+                    ] = performance_prices
+
+                    st.session_state[
+                        "candidate_history_returns"
+                    ] = performance_returns
+
+                    st.session_state[
+                        "candidate_history_performance_checked_at"
+                    ] = datetime.now().strftime(
+                        "%Y-%m-%d %H:%M:%S"
+                    )
+
                 history_display_columns = [
                     "분석 실행 ID",
                     "분석 완료 시각",
                     "종목명",
                     "종목코드",
                     "최근 종가",
+                    "현재가",
+                    "수익률(%)",
                     "최종 추천 점수",
                     "최종 추천 등급",
                     "최종 추천 의견"
@@ -1620,6 +1705,69 @@ with tab3:
                         .str.zfill(6)
                     )
 
+                current_price_map = st.session_state.get(
+                    "candidate_history_current_prices",
+                    {}
+                )
+
+                return_map = st.session_state.get(
+                    "candidate_history_returns",
+                    {}
+                )
+
+                performance_checked_at = st.session_state.get(
+                    "candidate_history_performance_checked_at",
+                    ""
+                )
+
+                valid_returns = [
+                    value
+                    for value in return_map.values()
+                    if pd.notna(value)
+                ]
+
+                if valid_returns:
+                    average_return = (
+                        sum(valid_returns) / len(valid_returns)
+                    )
+
+                    positive_count = sum(
+                        1
+                        for value in valid_returns
+                        if value > 0
+                    )
+
+                    negative_count = sum(
+                        1
+                        for value in valid_returns
+                        if value < 0
+                    )
+
+                    flat_count = sum(
+                        1
+                        for value in valid_returns
+                        if value == 0
+                    )
+
+                    st.caption(
+                        f"성과 조회 시각: {performance_checked_at} · "
+                        f"평균 수익률: {average_return:.2f}% · "
+                        f"상승 {positive_count}개 · "
+                        f"하락 {negative_count}개 · "
+                        f"보합 {flat_count}개"
+                    )
+
+                if "종목코드" in history_display_df.columns:
+                    history_display_df["현재가"] = (
+                        history_display_df["종목코드"]
+                        .map(current_price_map)
+                    )
+
+                    history_display_df["수익률(%)"] = (
+                        history_display_df["종목코드"]
+                        .map(return_map)
+                    )
+
                 if "최근 종가" in history_display_df.columns:
                     history_display_df["최근 종가"] = (
                         pd.to_numeric(
@@ -1636,6 +1784,14 @@ with tab3:
                         "최근 종가": st.column_config.NumberColumn(
                             "최근 종가",
                             format="%,d원"
+                        ),
+                        "현재가": st.column_config.NumberColumn(
+                            "현재가",
+                            format="%,d원"
+                        ),
+                        "수익률(%)": st.column_config.NumberColumn(
+                            "수익률(%)",
+                            format="%.2f%%"
                         )
                     }
                 )
