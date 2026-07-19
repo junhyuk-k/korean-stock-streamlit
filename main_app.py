@@ -1837,6 +1837,39 @@ with tab3:
                             )
                     if not filtered_performance_df.empty:
                         with st.expander("누적 성과 기록 보기"):
+                            available_checked_times = (
+                                filtered_performance_df[
+                                    "성과 조회 시각"
+                                ]
+                                .dropna()
+                                .astype(str)
+                                .drop_duplicates()
+                                .sort_values(ascending=False)
+                                .tolist()
+                                if "성과 조회 시각"
+                                in filtered_performance_df.columns
+                                else []
+                            )
+
+                            selected_checked_time = st.selectbox(
+                                "확인할 성과 조회 시각",
+                                options=["전체"] + available_checked_times,
+                                key="candidate_performance_time_filter"
+                            )
+
+                            if selected_checked_time == "전체":
+                                time_filtered_performance_df = (
+                                    filtered_performance_df.copy()
+                                )
+                            else:
+                                time_filtered_performance_df = (
+                                    filtered_performance_df[
+                                        filtered_performance_df[
+                                            "성과 조회 시각"
+                                        ].astype(str)
+                                        == selected_checked_time
+                                    ].copy()
+                                )
                             performance_display_columns = [
                                 "분석 실행 ID",
                                 "성과 조회 시각",
@@ -1850,46 +1883,46 @@ with tab3:
                                 "최종 추천 의견"
                             ]
 
-                            existing_performance_display_columns = [
-                                column
-                                for column in performance_display_columns
-                                if column in filtered_performance_df.columns
-                            ]
+                        existing_performance_display_columns = [
+                            column
+                            for column in performance_display_columns
+                            if column
+                            in time_filtered_performance_df.columns
+                        ]
 
-                            performance_display_df = (
-                                filtered_performance_df[
-                                    existing_performance_display_columns
-                                ].copy()
+                        performance_display_df = (
+                            time_filtered_performance_df[
+                                existing_performance_display_columns
+                            ].copy()
+                        )
+                        if "종목코드" in performance_display_df.columns:
+                            performance_display_df["종목코드"] = (
+                                performance_display_df["종목코드"]
+                                .astype(str)
+                                .str.replace('="', '', regex=False)
+                                .str.replace('"', '', regex=False)
+                                .str.zfill(6)
                             )
 
-                            if "종목코드" in performance_display_df.columns:
-                                performance_display_df["종목코드"] = (
-                                    performance_display_df["종목코드"]
-                                    .astype(str)
-                                    .str.replace('="', '', regex=False)
-                                    .str.replace('"', '', regex=False)
-                                    .str.zfill(6)
+                        st.dataframe(
+                            performance_display_df,
+                            width="stretch",
+                            hide_index=True,
+                            column_config={
+                                "최근 종가": st.column_config.NumberColumn(
+                                    "최근 종가",
+                                    format="%,d원"
+                                ),
+                                "현재가": st.column_config.NumberColumn(
+                                    "현재가",
+                                    format="%,d원"
+                                ),
+                                "수익률(%)": st.column_config.NumberColumn(
+                                    "수익률(%)",
+                                    format="%.2f%%"
                                 )
-
-                            st.dataframe(
-                                performance_display_df,
-                                width="stretch",
-                                hide_index=True,
-                                column_config={
-                                    "최근 종가": st.column_config.NumberColumn(
-                                        "최근 종가",
-                                        format="%,d원"
-                                    ),
-                                    "현재가": st.column_config.NumberColumn(
-                                        "현재가",
-                                        format="%,d원"
-                                    ),
-                                    "수익률(%)": st.column_config.NumberColumn(
-                                        "수익률(%)",
-                                        format="%.2f%%"
-                                    )
-                                }
-                            )
+                            }
+                        )
 
                 history_display_columns = [
                     "분석 실행 ID",
