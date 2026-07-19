@@ -1515,6 +1515,29 @@ with tab3:
             )
 
             with st.expander("누적 추천 기록 보기"):
+                performance_history_file = (
+                    "candidate_performance_history.csv"
+                )
+
+                if os.path.exists(performance_history_file):
+                    try:
+                        candidate_performance_df = pd.read_csv(
+                            performance_history_file,
+                            dtype={
+                                "분석 실행 ID": str,
+                                "종목코드": str,
+                                "성과 조회 시각": str
+                            }
+                        )
+                    except Exception as error:
+                        candidate_performance_df = pd.DataFrame()
+
+                        print(
+                            "[성과 누적 기록 불러오기 오류] "
+                            f"{error}"
+                        )
+                else:
+                    candidate_performance_df = pd.DataFrame()
                 available_run_ids = (
                     candidate_history_df["분석 실행 ID"]
                     .dropna()
@@ -1539,6 +1562,24 @@ with tab3:
                         .astype(str)
                         == selected_history_run_id
                     ].copy()
+
+                if candidate_performance_df.empty:
+                    filtered_performance_df = pd.DataFrame()
+
+                elif selected_history_run_id == "전체":
+                    filtered_performance_df = (
+                        candidate_performance_df.copy()
+                    )
+
+                else:
+                    filtered_performance_df = (
+                        candidate_performance_df[
+                            candidate_performance_df[
+                                "분석 실행 ID"
+                            ].astype(str)
+                            == selected_history_run_id
+                        ].copy()
+                    )
 
                 history_stock_count = len(filtered_history_df)
 
@@ -1793,6 +1834,61 @@ with tab3:
                             print(
                                 "[성과 기록 저장 오류] "
                                 f"{error}"
+                            )
+                    if not filtered_performance_df.empty:
+                        with st.expander("누적 성과 기록 보기"):
+                            performance_display_columns = [
+                                "분석 실행 ID",
+                                "성과 조회 시각",
+                                "종목명",
+                                "종목코드",
+                                "최근 종가",
+                                "현재가",
+                                "수익률(%)",
+                                "최종 추천 점수",
+                                "최종 추천 등급",
+                                "최종 추천 의견"
+                            ]
+
+                            existing_performance_display_columns = [
+                                column
+                                for column in performance_display_columns
+                                if column in filtered_performance_df.columns
+                            ]
+
+                            performance_display_df = (
+                                filtered_performance_df[
+                                    existing_performance_display_columns
+                                ].copy()
+                            )
+
+                            if "종목코드" in performance_display_df.columns:
+                                performance_display_df["종목코드"] = (
+                                    performance_display_df["종목코드"]
+                                    .astype(str)
+                                    .str.replace('="', '', regex=False)
+                                    .str.replace('"', '', regex=False)
+                                    .str.zfill(6)
+                                )
+
+                            st.dataframe(
+                                performance_display_df,
+                                width="stretch",
+                                hide_index=True,
+                                column_config={
+                                    "최근 종가": st.column_config.NumberColumn(
+                                        "최근 종가",
+                                        format="%,d원"
+                                    ),
+                                    "현재가": st.column_config.NumberColumn(
+                                        "현재가",
+                                        format="%,d원"
+                                    ),
+                                    "수익률(%)": st.column_config.NumberColumn(
+                                        "수익률(%)",
+                                        format="%.2f%%"
+                                    )
+                                }
                             )
 
                 history_display_columns = [
