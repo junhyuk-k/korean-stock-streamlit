@@ -2127,10 +2127,44 @@ with tab3:
                                     },
                                     title="평균 수익률 변화 추이"
                                 )
+                                chart_min_return = float(
+                                    performance_chart_df[
+                                        "평균_수익률"
+                                    ].min()
+                                )
 
+                                chart_max_return = float(
+                                    performance_chart_df[
+                                        "평균_수익률"
+                                    ].max()
+                                )
+
+                                if (
+                                    abs(
+                                        chart_max_return
+                                        - chart_min_return
+                                    )
+                                    < 0.000001
+                                ):
+                                    chart_padding = max(
+                                        abs(chart_max_return) * 0.1,
+                                        0.1
+                                    )
+
+                                else:
+                                    chart_padding = (
+                                        chart_max_return
+                                        - chart_min_return
+                                    ) * 0.15
+
+                                chart_y_range = [
+                                    chart_min_return - chart_padding,
+                                    chart_max_return + chart_padding
+                                ]
                                 performance_chart.update_layout(
                                     xaxis_title="조회 순번",
                                     yaxis_title="평균 수익률(%)",
+                                    yaxis_range=chart_y_range,
                                     hovermode="x unified"
                                 )
 
