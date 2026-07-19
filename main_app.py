@@ -2097,6 +2097,14 @@ with tab3:
                                 )
 
                                 performance_chart_df[
+                                    "조회 시각 표시"
+                                ] = performance_chart_df[
+                                    "성과 조회 시각"
+                                ].dt.strftime(
+                                    "%Y-%m-%d %H:%M"
+                                )
+
+                                performance_chart_df[
                                     "조회 순번"
                                 ] = (
                                     performance_chart_df.index + 1
@@ -2108,9 +2116,14 @@ with tab3:
                                     y="평균_수익률",
                                     markers=True,
                                     hover_data={
-                                        "성과 조회 시각": True,
+                                        "성과 조회 시각": False,
+                                        "조회 시각 표시": True,
                                         "조회 순번": True,
                                         "평균_수익률": ":.2f"
+                                    },
+                                    labels={
+                                        "조회 시각 표시": "성과 조회 시각",
+                                        "평균_수익률": "평균 수익률"
                                     },
                                     title="평균 수익률 변화 추이"
                                 )
