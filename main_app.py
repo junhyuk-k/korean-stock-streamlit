@@ -1870,6 +1870,78 @@ with tab3:
                                         == selected_checked_time
                                     ].copy()
                                 )
+
+                            performance_change_df = (
+                                filtered_performance_df.copy()
+                            )
+
+                            if (
+                                "성과 조회 시각"
+                                in performance_change_df.columns
+                                and "수익률(%)"
+                                in performance_change_df.columns
+                            ):
+                                performance_change_df["수익률(%)"] = (
+                                    pd.to_numeric(
+                                        performance_change_df["수익률(%)"],
+                                        errors="coerce"
+                                    )
+                                )
+
+                                performance_summary_df = (
+                                    performance_change_df
+                                    .groupby(
+                                        "성과 조회 시각",
+                                        as_index=False
+                                    )
+                                    .agg(
+                                        평균_수익률=(
+                                            "수익률(%)",
+                                            "mean"
+                                        ),
+                                        종목_수=(
+                                            "종목명",
+                                            "count"
+                                        )
+                                    )
+                                    .sort_values(
+                                        "성과 조회 시각"
+                                    )
+                                )
+
+                            else:
+                                performance_summary_df = pd.DataFrame()
+
+                        if not performance_summary_df.empty:
+                            st.caption(
+                                "성과 조회 시각별 평균 수익률 변화"
+                            )
+
+                            st.dataframe(
+                                performance_summary_df,
+                                width="stretch",
+                                hide_index=True,
+                                column_config={
+                                    "성과 조회 시각": (
+                                        st.column_config.TextColumn(
+                                            "성과 조회 시각"
+                                        )
+                                    ),
+                                    "평균_수익률": (
+                                        st.column_config.NumberColumn(
+                                            "평균 수익률",
+                                            format="%.2f%%"
+                                        )
+                                    ),
+                                    "종목_수": (
+                                        st.column_config.NumberColumn(
+                                            "종목 수",
+                                            format="%d개"
+                                        )
+                                    )
+                                }
+                            )
+
                             performance_display_columns = [
                                 "분석 실행 ID",
                                 "성과 조회 시각",
