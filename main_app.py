@@ -2031,14 +2031,27 @@ with tab3:
                                 )
                             )
 
-                        st.caption(
-                            f"최고 수익률 종목: "
-                            f"{best_stock_name} "
-                            f"{best_return_value:+.2f}% · "
-                            f"최저 수익률 종목: "
-                            f"{worst_stock_name} "
-                            f"{worst_return_value:+.2f}%"
-                        )
+                            if (
+                                abs(
+                                    best_return_value
+                                    - worst_return_value
+                                )
+                                < 0.000001
+                            ):
+                                st.caption(
+                                    f"전체 종목 수익률 동일: "
+                                    f"{best_return_value:+.2f}%"
+                                )
+
+                            else:
+                                st.caption(
+                                    f"최고 수익률 종목: "
+                                    f"{best_stock_name} "
+                                    f"{best_return_value:+.2f}% · "
+                                    f"최저 수익률 종목: "
+                                    f"{worst_stock_name} "
+                                    f"{worst_return_value:+.2f}%"
+                                )
 
                         if not performance_summary_df.empty:
                             st.caption(
