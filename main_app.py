@@ -2090,24 +2090,48 @@ with tab3:
                             )
 
                             if not performance_chart_df.empty:
+                                performance_chart_df = (
+                                    performance_chart_df
+                                    .sort_values("성과 조회 시각")
+                                    .reset_index(drop=True)
+                                )
+
+                                performance_chart_df[
+                                    "조회 순번"
+                                ] = (
+                                    performance_chart_df.index + 1
+                                )
+
                                 performance_chart = px.line(
                                     performance_chart_df,
-                                    x="성과 조회 시각",
+                                    x="조회 순번",
                                     y="평균_수익률",
                                     markers=True,
+                                    hover_data={
+                                        "성과 조회 시각": True,
+                                        "조회 순번": True,
+                                        "평균_수익률": ":.2f"
+                                    },
                                     title="평균 수익률 변화 추이"
                                 )
 
                                 performance_chart.update_layout(
-                                    xaxis_title="성과 조회 시각",
+                                    xaxis_title="조회 순번",
                                     yaxis_title="평균 수익률(%)",
                                     hovermode="x unified"
+                                )
+
+                                performance_chart.update_xaxes(
+                                    dtick=1
                                 )
 
                                 st.plotly_chart(
                                     performance_chart,
                                     width="stretch",
-                                    key="candidate_performance_summary_chart"
+                                    key=(
+                                        "candidate_performance_"
+                                        "summary_chart"
+                                    )
                                 )
 
                             st.dataframe(
