@@ -837,11 +837,12 @@ def restore_latest_score_history_backup():
 
 stocks = load_stock_list()
 
-tab1, tab2, tab3, tab4 = st.tabs([
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📈 종목 차트 분석",
     "📋 전체 공시 분석",
     "🔎 추천 후보 찾기",
-    "⭐ 관심종목"
+    "⭐ 관심종목",
+    "📰 뉴스 분석"
 ])
 
 
@@ -6173,3 +6174,73 @@ with tab4:
             "아직 저장된 관심종목이 없습니다. "
             "추천 후보 탭에서 관심종목을 추가하세요."
         )
+
+# ------------------------------------------------------------
+# 다섯 번째 탭: 뉴스 분석
+# ------------------------------------------------------------
+with tab5:
+    st.subheader("📰 수동 뉴스 분석")
+
+    st.info(
+        "뉴스 제목과 본문을 직접 입력하면 "
+        "시장 영향, 중요도, 사건 진행 단계와 관련 종목을 분석합니다."
+    )
+
+    news_title = st.text_input(
+        "뉴스 제목",
+        placeholder="분석할 뉴스 제목을 입력하세요.",
+        key="manual_news_title"
+    )
+
+    news_body = st.text_area(
+        "뉴스 본문",
+        placeholder="분석할 뉴스 기사 본문을 붙여 넣으세요.",
+        height=300,
+        key="manual_news_body"
+    )
+
+    news_source = st.text_input(
+        "뉴스 출처",
+        placeholder="예: 연합뉴스, 한국경제, 기업 공식 보도자료",
+        key="manual_news_source"
+    )
+
+    news_date = st.date_input(
+        "뉴스 작성일",
+        key="manual_news_date"
+    )
+
+    related_country = st.text_input(
+        "관련 국가",
+        placeholder="예: 한국, 미국, 체코, 사우디아라비아",
+        key="manual_news_country"
+    )
+
+    related_stock_industry = st.text_input(
+        "관련 종목 또는 산업",
+        placeholder="예: 두산에너빌리티, 원전, 방산, 반도체",
+        key="manual_news_stock_industry"
+    )
+
+    analysis_mode = st.selectbox(
+        "분석 방식",
+        ["빠른 분석", "기본 분석", "상세 분석"],
+        index=1,
+        key="manual_news_analysis_mode"
+    )
+
+    analyze_news_button = st.button(
+        "뉴스 분석 시작",
+        type="primary",
+        key="manual_news_analyze_button"
+    )
+
+    if analyze_news_button:
+        if not news_title.strip():
+            st.warning("뉴스 제목을 입력해주세요.")
+
+        elif not news_body.strip():
+            st.warning("뉴스 본문을 입력해주세요.")
+
+        else:
+            st.success("필수 입력값 확인이 완료되었습니다.")
