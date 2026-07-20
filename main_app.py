@@ -835,6 +835,48 @@ def restore_latest_score_history_backup():
         "backup_file": latest_backup_file
     }
 
+# ------------------------------------------------------------
+# 수동 뉴스 분석 함수
+# ------------------------------------------------------------
+def classify_news_market_direction(news_text):
+    positive_keywords = [
+        "수주", "계약", "공급", "선정", "지원", "확대",
+        "승인", "투자", "증설", "매출 증가", "흑자", "성장"
+    ]
+
+    negative_keywords = [
+        "취소", "해지", "지연", "적자", "감소", "소송",
+        "제재", "중단", "부도", "유상증자", "전환사채", "하락"
+    ]
+
+    positive_count = sum(
+        keyword in news_text
+        for keyword in positive_keywords
+    )
+
+    negative_count = sum(
+        keyword in news_text
+        for keyword in negative_keywords
+    )
+
+    score_difference = positive_count - negative_count
+
+    if score_difference >= 3:
+        return "매우 긍정"
+
+    if score_difference >= 1:
+        return "긍정"
+
+    if score_difference <= -3:
+        return "매우 부정"
+
+    if score_difference <= -1:
+        return "부정"
+
+    return "중립"
+
+
+
 stocks = load_stock_list()
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -6243,4 +6285,11 @@ with tab5:
             st.warning("뉴스 본문을 입력해주세요.")
 
         else:
+            combined_news_text = f"{news_title}\n{news_body}"
+
+            market_direction = classify_news_market_direction(
+                combined_news_text
+            )
+
             st.success("필수 입력값 확인이 완료되었습니다.")
+            st.write(f"시장 영향 방향: **{market_direction}**")
