@@ -1235,6 +1235,34 @@ def extract_news_risk_factors(news_text):
 
     return risk_factors
 
+def extract_news_upside_triggers(news_text):
+    trigger_rules = [
+        ("공식 계약 체결", ["계약 체결", "본계약", "공급 계약"]),
+        ("신규 수주 확인", ["신규 수주", "수주 확정", "수주 계약"]),
+        ("정부 정책 발표", ["정부 발표", "정책 발표", "지원책 발표"]),
+        ("최종 선정 발표", ["최종 선정", "사업자 선정", "공급사 선정"]),
+        ("공급 또는 납품 시작", ["공급 시작", "납품 시작", "양산 공급"]),
+        ("생산 확대 실행", ["증설 착공", "공장 착공", "생산시설 착공"]),
+        ("제품 승인", ["품목 허가", "판매 승인", "최종 승인"]),
+        ("실적 개선 확인", ["흑자 전환", "실적 개선", "매출 증가"]),
+        ("대규모 투자 확정", ["투자 확정", "대규모 투자", "신규 투자"]),
+        ("해외 시장 진출", ["해외 진출", "수출 계약", "해외 공급"])
+    ]
+
+    upside_triggers = []
+
+    for trigger_name, keywords in trigger_rules:
+        if any(
+            keyword in news_text
+            for keyword in keywords
+        ):
+            upside_triggers.append(trigger_name)
+
+    if not upside_triggers:
+        upside_triggers.append("추가 상승 트리거 확인 필요")
+
+    return upside_triggers
+
 stocks = load_stock_list()
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -6692,6 +6720,10 @@ with tab5:
                 combined_news_text
             )
 
+            upside_triggers = extract_news_upside_triggers(
+                combined_news_text
+            )
+
             st.success("필수 입력값 확인이 완료되었습니다.")
             st.write(f"시장 영향 방향: **{market_direction}**")
             st.write(f"뉴스 중요도: **{news_importance}**")
@@ -6711,3 +6743,8 @@ with tab5:
 
             for risk_factor in risk_factors:
                 st.write(f"- {risk_factor}")
+
+            st.markdown("#### 상승 트리거")
+
+            for upside_trigger in upside_triggers:
+                st.write(f"- {upside_trigger}")
