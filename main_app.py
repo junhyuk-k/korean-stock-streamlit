@@ -1207,6 +1207,34 @@ def extract_news_positive_factors(news_text):
 
     return positive_factors
 
+def extract_news_risk_factors(news_text):
+    risk_factor_rules = [
+        ("계약 취소 또는 해지 위험", ["계약 취소", "계약 해지", "수주 취소"]),
+        ("사업 지연 위험", ["사업 지연", "일정 지연", "납품 지연"]),
+        ("실적 악화 위험", ["실적 악화", "적자 전환", "매출 감소"]),
+        ("규제 또는 제재 위험", ["규제", "제재", "과징금", "행정처분"]),
+        ("법적 분쟁 위험", ["소송", "분쟁", "고소", "고발"]),
+        ("원가 상승 위험", ["원가 상승", "원자재 가격 상승", "비용 증가"]),
+        ("자금 조달 위험", ["유상증자", "전환사채", "차입 증가"]),
+        ("수요 감소 위험", ["수요 감소", "판매 감소", "시장 축소"]),
+        ("공급 차질 위험", ["공급 차질", "생산 중단", "가동 중단"]),
+        ("불확실성 지속", ["검토 중", "논의 중", "협상 중"])
+    ]
+
+    risk_factors = []
+
+    for factor_name, keywords in risk_factor_rules:
+        if any(
+            keyword in news_text
+            for keyword in keywords
+        ):
+            risk_factors.append(factor_name)
+
+    if not risk_factors:
+        risk_factors.append("현재 문장에서 뚜렷한 위험 요인 없음")
+
+    return risk_factors
+
 stocks = load_stock_list()
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -6660,6 +6688,10 @@ with tab5:
                 combined_news_text
             )
 
+            risk_factors = extract_news_risk_factors(
+                combined_news_text
+            )
+
             st.success("필수 입력값 확인이 완료되었습니다.")
             st.write(f"시장 영향 방향: **{market_direction}**")
             st.write(f"뉴스 중요도: **{news_importance}**")
@@ -6669,8 +6701,13 @@ with tab5:
             st.write(f"뉴스 최신성: **{news_freshness}**")
             st.write(f"분석 신뢰도: **{analysis_confidence}**")
             st.write(f"뉴스 기본 점수: **{news_basic_score}점**")
-            
+
             st.markdown("#### 긍정 요인")
 
             for positive_factor in positive_factors:
                 st.write(f"- {positive_factor}")
+
+            st.markdown("#### 위험 요인")
+
+            for risk_factor in risk_factors:
+                st.write(f"- {risk_factor}")
