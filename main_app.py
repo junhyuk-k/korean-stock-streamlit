@@ -1055,6 +1055,65 @@ def classify_news_freshness(news_date):
 
     return "오래됨"
 
+def classify_news_analysis_confidence(
+    source_reliability,
+    progress_stage,
+    news_freshness
+):
+    confidence_score = 0
+
+    source_score_map = {
+        "매우 높음": 3,
+        "높음": 2,
+        "보통": 1,
+        "낮음": 0
+    }
+
+    stage_score_map = {
+        "매출 반영": 3,
+        "공급": 3,
+        "계약": 3,
+        "선정": 2,
+        "입찰": 2,
+        "MOU": 1,
+        "협상": 1,
+        "논의": 0,
+        "검토": 0
+    }
+
+    freshness_score_map = {
+        "당일": 2,
+        "최근": 2,
+        "보통": 1,
+        "오래됨": 0
+    }
+
+    confidence_score += source_score_map.get(
+        source_reliability,
+        0
+    )
+
+    confidence_score += stage_score_map.get(
+        progress_stage,
+        0
+    )
+
+    confidence_score += freshness_score_map.get(
+        news_freshness,
+        0
+    )
+
+    if confidence_score >= 7:
+        return "매우 높음"
+
+    if confidence_score >= 5:
+        return "높음"
+
+    if confidence_score >= 3:
+        return "보통"
+
+    return "낮음"
+
 stocks = load_stock_list()
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -6489,6 +6548,12 @@ with tab5:
                 news_date
             )
 
+            analysis_confidence = classify_news_analysis_confidence(
+                source_reliability,
+                progress_stage,
+                news_freshness
+            )
+
             st.success("필수 입력값 확인이 완료되었습니다.")
             st.write(f"시장 영향 방향: **{market_direction}**")
             st.write(f"뉴스 중요도: **{news_importance}**")
@@ -6496,3 +6561,4 @@ with tab5:
             st.write(f"예상 영향 기간: **{impact_period}**")
             st.write(f"출처 신뢰도: **{source_reliability}**")
             st.write(f"뉴스 최신성: **{news_freshness}**")
+            st.write(f"분석 신뢰도: **{analysis_confidence}**")
