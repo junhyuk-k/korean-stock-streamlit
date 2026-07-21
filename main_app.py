@@ -1181,6 +1181,32 @@ def calculate_news_basic_score(
 
     return min(total_score, 100)
 
+def extract_news_positive_factors(news_text):
+    positive_factor_rules = [
+        ("신규 계약 또는 수주", ["계약 체결", "수주", "공급 계약"]),
+        ("정부 지원", ["정부 지원", "정책 지원", "지원 확대"]),
+        ("투자 확대", ["신규 투자", "투자 확대", "대규모 투자"]),
+        ("생산 능력 확대", ["증설", "공장 건설", "생산시설 건설"]),
+        ("시장 확대", ["시장 확대", "수요 증가", "시장 진출"]),
+        ("승인 또는 선정", ["승인", "최종 선정", "사업자 선정"]),
+        ("매출 증가 가능성", ["매출 증가", "실적 개선", "흑자 전환"]),
+        ("장기 공급 기반", ["장기 공급", "장기 계약", "다년 계약"])
+    ]
+
+    positive_factors = []
+
+    for factor_name, keywords in positive_factor_rules:
+        if any(
+            keyword in news_text
+            for keyword in keywords
+        ):
+            positive_factors.append(factor_name)
+
+    if not positive_factors:
+        positive_factors.append("명확한 긍정 요인 추가 확인 필요")
+
+    return positive_factors
+
 stocks = load_stock_list()
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -6630,6 +6656,10 @@ with tab5:
                 analysis_confidence
             )
 
+            positive_factors = extract_news_positive_factors(
+                combined_news_text
+            )
+
             st.success("필수 입력값 확인이 완료되었습니다.")
             st.write(f"시장 영향 방향: **{market_direction}**")
             st.write(f"뉴스 중요도: **{news_importance}**")
@@ -6639,3 +6669,8 @@ with tab5:
             st.write(f"뉴스 최신성: **{news_freshness}**")
             st.write(f"분석 신뢰도: **{analysis_confidence}**")
             st.write(f"뉴스 기본 점수: **{news_basic_score}점**")
+            
+            st.markdown("#### 긍정 요인")
+
+            for positive_factor in positive_factors:
+                st.write(f"- {positive_factor}")
