@@ -1114,6 +1114,73 @@ def classify_news_analysis_confidence(
 
     return "낮음"
 
+def calculate_news_basic_score(
+    market_direction,
+    news_importance,
+    progress_stage,
+    source_reliability,
+    news_freshness,
+    analysis_confidence
+):
+    market_score_map = {
+        "매우 긍정": 25,
+        "긍정": 20,
+        "중립": 12,
+        "부정": 5,
+        "매우 부정": 0
+    }
+
+    importance_score_map = {
+        "매우 높음": 20,
+        "높음": 15,
+        "보통": 8,
+        "낮음": 3
+    }
+
+    stage_score_map = {
+        "매출 반영": 20,
+        "공급": 18,
+        "계약": 17,
+        "선정": 14,
+        "입찰": 11,
+        "MOU": 8,
+        "협상": 6,
+        "논의": 3,
+        "검토": 1
+    }
+
+    source_score_map = {
+        "매우 높음": 15,
+        "높음": 12,
+        "보통": 7,
+        "낮음": 2
+    }
+
+    freshness_score_map = {
+        "당일": 10,
+        "최근": 8,
+        "보통": 4,
+        "오래됨": 1
+    }
+
+    confidence_score_map = {
+        "매우 높음": 10,
+        "높음": 8,
+        "보통": 5,
+        "낮음": 2
+    }
+
+    total_score = (
+        market_score_map.get(market_direction, 0)
+        + importance_score_map.get(news_importance, 0)
+        + stage_score_map.get(progress_stage, 0)
+        + source_score_map.get(source_reliability, 0)
+        + freshness_score_map.get(news_freshness, 0)
+        + confidence_score_map.get(analysis_confidence, 0)
+    )
+
+    return min(total_score, 100)
+
 stocks = load_stock_list()
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -6554,6 +6621,15 @@ with tab5:
                 news_freshness
             )
 
+            news_basic_score = calculate_news_basic_score(
+                market_direction,
+                news_importance,
+                progress_stage,
+                source_reliability,
+                news_freshness,
+                analysis_confidence
+            )
+
             st.success("필수 입력값 확인이 완료되었습니다.")
             st.write(f"시장 영향 방향: **{market_direction}**")
             st.write(f"뉴스 중요도: **{news_importance}**")
@@ -6562,3 +6638,4 @@ with tab5:
             st.write(f"출처 신뢰도: **{source_reliability}**")
             st.write(f"뉴스 최신성: **{news_freshness}**")
             st.write(f"분석 신뢰도: **{analysis_confidence}**")
+            st.write(f"뉴스 기본 점수: **{news_basic_score}점**")
