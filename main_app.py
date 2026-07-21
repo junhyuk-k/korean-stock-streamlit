@@ -990,6 +990,50 @@ def classify_news_impact_period(news_text):
 
     return "단기"
 
+def classify_news_source_reliability(news_source):
+    source_text = news_source.strip().lower()
+
+    very_high_keywords = [
+        "금융감독원", "전자공시", "dart", "한국거래소",
+        "정부", "부처", "공공기관", "공식 공시",
+        "공식 보도자료", "기업 공식", "계약 상대방 공식"
+    ]
+
+    high_keywords = [
+        "연합뉴스", "한국경제", "매일경제", "서울경제",
+        "조선일보", "중앙일보", "동아일보",
+        "kbs", "mbc", "sbs", "reuters", "bloomberg"
+    ]
+
+    low_keywords = [
+        "커뮤니티", "게시판", "블로그", "카페",
+        "유튜브", "sns", "텔레그램", "익명",
+        "출처 불명", "찌라시"
+    ]
+
+    if any(
+        keyword.lower() in source_text
+        for keyword in very_high_keywords
+    ):
+        return "매우 높음"
+
+    if any(
+        keyword.lower() in source_text
+        for keyword in high_keywords
+    ):
+        return "높음"
+
+    if any(
+        keyword.lower() in source_text
+        for keyword in low_keywords
+    ):
+        return "낮음"
+
+    if source_text:
+        return "보통"
+
+    return "낮음"
+
 stocks = load_stock_list()
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -6416,8 +6460,13 @@ with tab5:
                 combined_news_text
             )
 
+            source_reliability = classify_news_source_reliability(
+                news_source
+            )
+
             st.success("필수 입력값 확인이 완료되었습니다.")
             st.write(f"시장 영향 방향: **{market_direction}**")
             st.write(f"뉴스 중요도: **{news_importance}**")
             st.write(f"사건 진행 단계: **{progress_stage}**")
             st.write(f"예상 영향 기간: **{impact_period}**")
+            st.write(f"출처 신뢰도: **{source_reliability}**")
