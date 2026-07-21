@@ -1,4 +1,5 @@
 import os
+import re
 import requests
 import feedparser
 import pandas as pd
@@ -101,6 +102,287 @@ def load_auto_news():
     )
 
     return news_df.reset_index(drop=True)
+
+def is_stock_name_mentioned(stock_name, news_title):
+    stock_name = str(stock_name).strip()
+    news_title = str(news_title).strip()
+
+    if not stock_name or not news_title:
+        return False
+
+    ambiguous_korean_names = {
+        "대상",
+        "동방",
+        "진도",
+        "한창",
+        "보령",
+        "우리로"
+    }
+
+    company_context_keywords = [
+        "주가",
+        "실적",
+        "매출",
+        "영업이익",
+        "공시",
+        "계약",
+        "수주",
+        "투자",
+        "증자",
+        "배당",
+        "상장",
+        "증권",
+        "목표가",
+        "급등",
+        "급락",
+        "기업",
+        "회사"
+    ]
+
+    if re.fullmatch(
+        r"[A-Za-z0-9&.-]{1,4}",
+        stock_name
+    ):
+        stock_pattern = (
+            rf"(?<![0-9A-Za-z가-힣])"
+            rf"{re.escape(stock_name)}"
+            rf"(?![0-9A-Za-z가-힣])"
+        )
+
+        return (
+            re.search(
+                stock_pattern,
+                news_title,
+                flags=re.IGNORECASE
+            )
+            is not None
+        )
+
+    if stock_name in ambiguous_korean_names:
+        stock_pattern = (
+            rf"(?<![0-9A-Za-z가-힣])"
+            rf"{re.escape(stock_name)}"
+            rf"(?![0-9A-Za-z가-힣])"
+        )
+
+        match = re.search(
+            stock_pattern,
+            news_title
+        )
+
+        if match is None:
+            return False
+
+        after_context_end = min(
+            len(news_title),
+            match.end() + 20
+        )
+
+        after_context = news_title[
+            match.end():after_context_end
+        ]
+
+        name_is_company_style = (
+            match.start() == 0
+            or after_context.startswith(
+                (
+                    ",",
+                    "·",
+                    ":",
+                    "…",
+                    "㈜"
+                )
+            )
+        )
+
+        if not name_is_company_style:
+            return False
+
+        return any(
+            keyword in after_context
+            for keyword in company_context_keywords
+        )
+
+    return stock_name in news_title
+
+def remove_overlapping_stock_matches(
+    matched_stock_names,
+    news_title
+):
+    if len(matched_stock_names) <= 1:
+        return matched_stock_names
+
+    match_details = []
+
+    for matched_stock in matched_stock_names:
+        stock_name = str(
+            matched_stock["종목명"]
+        ).strip()
+
+        stock_spans = [
+            (
+                match.start(),
+                match.end()
+            )
+            for match in re.finditer(
+                re.escape(stock_name),
+                news_title,
+                flags=re.IGNORECASE
+            )
+        ]
+
+        match_details.append(
+            {
+                "종목정보": matched_stock,
+                "종목명": stock_name,
+                "등장위치": stock_spans
+            }
+        )
+
+    filtered_matches = []
+
+    for current_match in match_details:
+        current_name = current_match["종목명"]
+        current_spans = current_match["등장위치"]
+
+        has_independent_position = False
+
+        for current_start, current_end in current_spans:
+            is_inside_longer_name = False
+
+            for other_match in match_details:
+                other_name = other_match["종목명"]
+
+                if len(other_name) <= len(current_name):
+                    continue
+
+                for other_start, other_end in other_match["등장위치"]:
+                    if (
+                        other_start <= current_start
+                        and current_end <= other_end
+                    ):
+                        is_inside_longer_name = True
+                        break
+
+                if is_inside_longer_name:
+                    break
+
+            if not is_inside_longer_name:
+                has_independent_position = True
+                break
+
+        if has_independent_position:
+            filtered_matches.append(
+                current_match["종목정보"]
+            )
+
+    return filtered_matches
+
+@st.cache_data(ttl=900)
+def connect_news_to_stocks(news_df):
+    stock_df = load_stock_list()
+
+    if news_df.empty or stock_df.empty:
+        return pd.DataFrame(
+            columns=[
+                "카테고리",
+                "제목",
+                "출처",
+                "작성일",
+                "링크",
+                "연결 종목명",
+                "종목코드",
+                "연결 유형"
+            ]
+        )
+
+    stock_name_column = "Name"
+    stock_code_column = "Code"
+
+    stock_candidates = stock_df[
+        [stock_name_column, stock_code_column]
+    ].dropna().copy()
+
+    stock_candidates[stock_name_column] = (
+        stock_candidates[stock_name_column]
+        .astype(str)
+        .str.strip()
+    )
+
+    stock_candidates = stock_candidates[
+        stock_candidates[stock_name_column].str.len() >= 2
+    ]
+
+    connected_rows = []
+
+    for _, news_row in news_df.iterrows():
+        news_title = str(
+            news_row.get("제목", "")
+        ).strip()
+
+        matched_stock_names = []
+
+        for _, stock_row in stock_candidates.iterrows():
+            stock_name = stock_row[stock_name_column]
+
+            if is_stock_name_mentioned(
+                stock_name,
+                news_title
+            ):
+                matched_stock_names.append(
+                    {
+                        "종목명": stock_name,
+                        "종목코드": stock_row[stock_code_column]
+                    }
+                )
+
+        if not matched_stock_names:
+            continue
+
+        matched_stock_names = remove_overlapping_stock_matches(
+            matched_stock_names,
+            news_title
+        )
+
+        for matched_stock in matched_stock_names:
+            connected_rows.append(
+                {
+                    "카테고리": news_row.get("카테고리", ""),
+                    "제목": news_title,
+                    "출처": news_row.get("출처", ""),
+                    "작성일": news_row.get("작성일", ""),
+                    "링크": news_row.get("링크", ""),
+                    "연결 종목명": matched_stock["종목명"],
+                    "종목코드": matched_stock["종목코드"],
+                    "연결 유형": "뉴스 제목 직접 언급"
+                }
+            )
+
+    if not connected_rows:
+        return pd.DataFrame(
+            columns=[
+                "카테고리",
+                "제목",
+                "출처",
+                "작성일",
+                "링크",
+                "연결 종목명",
+                "종목코드",
+                "연결 유형"
+            ]
+        )
+
+    connected_df = pd.DataFrame(connected_rows)
+
+    connected_df = connected_df.drop_duplicates(
+        subset=[
+            "제목",
+            "연결 종목명"
+        ],
+        keep="first"
+    )
+
+    return connected_df.reset_index(drop=True)
 
 @st.cache_data(ttl=3600)
 def load_investor_trading(ticker):
@@ -6666,6 +6948,10 @@ with tab5:
 
     auto_news_df = load_auto_news()
 
+    connected_news_df = connect_news_to_stocks(
+        auto_news_df
+    )
+
     if auto_news_df.empty:
         st.warning("자동으로 수집된 뉴스가 없습니다.")
     else:
@@ -6699,6 +6985,32 @@ with tab5:
             use_container_width=True,
             hide_index=True
         )
+
+        st.markdown("### 📌 뉴스 제목 직접 언급 종목")
+
+        if connected_news_df.empty:
+            st.info("현재 수집 뉴스 제목에서 직접 언급된 국내 상장종목이 없습니다.")
+        else:
+            st.write(
+                f"직접 언급 연결 결과: **{len(connected_news_df)}건**"
+            )
+
+            st.dataframe(
+                connected_news_df[
+                    [
+                        "연결 종목명",
+                        "종목코드",
+                        "연결 유형",
+                        "카테고리",
+                        "제목",
+                        "출처",
+                        "작성일",
+                        "링크"
+                    ]
+                ],
+                use_container_width=True,
+                hide_index=True
+            )
 
     st.divider()
 
