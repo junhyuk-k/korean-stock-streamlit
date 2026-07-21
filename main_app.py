@@ -921,6 +921,28 @@ def classify_news_importance(news_text):
 
     return "낮음"
 
+def classify_news_progress_stage(news_text):
+    stage_keywords = [
+        ("매출 반영", ["매출 반영", "실적 반영", "매출로 인식"]),
+        ("공급", ["공급 시작", "납품 시작", "양산 공급", "제품 공급"]),
+        ("계약", ["계약 체결", "본계약", "공급 계약", "수주 계약"]),
+        ("선정", ["최종 선정", "사업자 선정", "공급사 선정", "우선협상대상자"]),
+        ("입찰", ["입찰 참여", "입찰 공고", "입찰 제안", "입찰"]),
+        ("MOU", ["MOU", "업무협약", "양해각서"]),
+        ("협상", ["협상", "조건 조율", "가격 협의"]),
+        ("논의", ["논의", "협의", "대화 진행"]),
+        ("검토", ["검토", "검토 중", "가능성 검토"])
+    ]
+
+    for stage_name, keywords in stage_keywords:
+        if any(
+            keyword in news_text
+            for keyword in keywords
+        ):
+            return stage_name
+
+    return "검토"
+
 stocks = load_stock_list()
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -6339,6 +6361,11 @@ with tab5:
                 combined_news_text
             )
 
+            progress_stage = classify_news_progress_stage(
+                combined_news_text
+            )
+
             st.success("필수 입력값 확인이 완료되었습니다.")
             st.write(f"시장 영향 방향: **{market_direction}**")
             st.write(f"뉴스 중요도: **{news_importance}**")
+            st.write(f"사건 진행 단계: **{progress_stage}**")
