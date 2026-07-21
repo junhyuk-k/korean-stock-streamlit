@@ -875,7 +875,51 @@ def classify_news_market_direction(news_text):
 
     return "중립"
 
+def classify_news_importance(news_text):
+    very_high_keywords = [
+        "계약 체결", "공급 계약", "수주", "최종 선정",
+        "정부 발표", "공식 발표", "공시", "인수", "합병"
+    ]
 
+    high_keywords = [
+        "투자", "지원", "확대", "승인",
+        "MOU", "입찰", "협상", "증설"
+    ]
+
+    normal_keywords = [
+        "검토", "논의", "계획", "예정", "추진"
+    ]
+
+    importance_score = 0
+
+    importance_score += sum(
+        3
+        for keyword in very_high_keywords
+        if keyword in news_text
+    )
+
+    importance_score += sum(
+        2
+        for keyword in high_keywords
+        if keyword in news_text
+    )
+
+    importance_score += sum(
+        1
+        for keyword in normal_keywords
+        if keyword in news_text
+    )
+
+    if importance_score >= 6:
+        return "매우 높음"
+
+    if importance_score >= 3:
+        return "높음"
+
+    if importance_score >= 1:
+        return "보통"
+
+    return "낮음"
 
 stocks = load_stock_list()
 
@@ -6291,5 +6335,10 @@ with tab5:
                 combined_news_text
             )
 
+            news_importance = classify_news_importance(
+                combined_news_text
+            )
+
             st.success("필수 입력값 확인이 완료되었습니다.")
             st.write(f"시장 영향 방향: **{market_direction}**")
+            st.write(f"뉴스 중요도: **{news_importance}**")
