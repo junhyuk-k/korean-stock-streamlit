@@ -943,6 +943,53 @@ def classify_news_progress_stage(news_text):
 
     return "검토"
 
+def classify_news_impact_period(news_text):
+    long_term_keywords = [
+        "장기 공급", "장기 계약", "다년 계약", "국가 프로젝트",
+        "중장기 계획", "산업 육성", "생산시설 건설", "공장 건설"
+    ]
+
+    mid_term_keywords = [
+        "증설", "양산 예정", "공급 예정", "사업 추진",
+        "정책 지원", "투자 계획", "개발 계획", "상용화"
+    ]
+
+    short_term_keywords = [
+        "계약 체결", "수주", "최종 선정", "승인",
+        "공식 발표", "공급 시작", "납품 시작"
+    ]
+
+    very_short_term_keywords = [
+        "오늘", "금일", "긴급 발표", "즉시 시행",
+        "거래 재개", "상한가", "급등"
+    ]
+
+    if any(
+        keyword in news_text
+        for keyword in long_term_keywords
+    ):
+        return "장기"
+
+    if any(
+        keyword in news_text
+        for keyword in mid_term_keywords
+    ):
+        return "중기"
+
+    if any(
+        keyword in news_text
+        for keyword in short_term_keywords
+    ):
+        return "단기"
+
+    if any(
+        keyword in news_text
+        for keyword in very_short_term_keywords
+    ):
+        return "초단기"
+
+    return "단기"
+
 stocks = load_stock_list()
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -6365,7 +6412,12 @@ with tab5:
                 combined_news_text
             )
 
+            impact_period = classify_news_impact_period(
+                combined_news_text
+            )
+
             st.success("필수 입력값 확인이 완료되었습니다.")
             st.write(f"시장 영향 방향: **{market_direction}**")
             st.write(f"뉴스 중요도: **{news_importance}**")
             st.write(f"사건 진행 단계: **{progress_stage}**")
+            st.write(f"예상 영향 기간: **{impact_period}**")
