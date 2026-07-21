@@ -5,3 +5,4 @@ finance-datareader
 plotly
 python-dotenv
 pykrx==1.2.8
+feedparser==6.0.12
