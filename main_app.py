@@ -1034,6 +1034,27 @@ def classify_news_source_reliability(news_source):
 
     return "낮음"
 
+def classify_news_freshness(news_date):
+    today = datetime.today().date()
+
+    if hasattr(news_date, "date"):
+        news_date_value = news_date.date()
+    else:
+        news_date_value = news_date
+
+    day_difference = (today - news_date_value).days
+
+    if day_difference <= 0:
+        return "당일"
+
+    if day_difference <= 7:
+        return "최근"
+
+    if day_difference <= 30:
+        return "보통"
+
+    return "오래됨"
+
 stocks = load_stock_list()
 
 tab1, tab2, tab3, tab4, tab5 = st.tabs([
@@ -6464,9 +6485,14 @@ with tab5:
                 news_source
             )
 
+            news_freshness = classify_news_freshness(
+                news_date
+            )
+
             st.success("필수 입력값 확인이 완료되었습니다.")
             st.write(f"시장 영향 방향: **{market_direction}**")
             st.write(f"뉴스 중요도: **{news_importance}**")
             st.write(f"사건 진행 단계: **{progress_stage}**")
             st.write(f"예상 영향 기간: **{impact_period}**")
             st.write(f"출처 신뢰도: **{source_reliability}**")
+            st.write(f"뉴스 최신성: **{news_freshness}**")
