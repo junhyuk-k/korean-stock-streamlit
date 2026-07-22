@@ -116,7 +116,8 @@ def is_stock_name_mentioned(stock_name, news_title):
         "진도",
         "한창",
         "보령",
-        "우리로"
+        "우리로",
+        "전방"
     }
 
     company_context_keywords = [
@@ -393,6 +394,12 @@ def summarize_connected_news_by_stock(connected_news_df):
                 "종목명",
                 "종목코드",
                 "뉴스 건수",
+                "평균 기사 점수",
+                "최고 기사 점수",
+                "기사 수 가점",
+                "추천 점수",
+                "대표 긍정 근거",
+                "대표 위험 근거",
                 "최근 기사 제목",
                 "최근 출처",
                 "최근 작성일",
@@ -400,9 +407,36 @@ def summarize_connected_news_by_stock(connected_news_df):
             ]
         )
 
+    scored_news_df = connected_news_df.copy()
+
+    article_score_results = scored_news_df.apply(
+        lambda news_row: calculate_auto_news_article_score(
+            news_row.get("제목", ""),
+            news_row.get("출처", ""),
+            news_row.get("작성일", "")
+        ),
+        axis=1
+    )
+
+    scored_news_df["기사 점수"] = article_score_results.apply(
+        lambda score_result: score_result["기사 점수"]
+    )
+
+    scored_news_df["긍정 근거"] = article_score_results.apply(
+        lambda score_result: ", ".join(
+            score_result["긍정 근거"]
+        )
+    )
+
+    scored_news_df["위험 근거"] = article_score_results.apply(
+        lambda score_result: ", ".join(
+            score_result["위험 근거"]
+        )
+    )
+
     summary_rows = []
 
-    grouped_news = connected_news_df.groupby(
+    grouped_news = scored_news_df.groupby(
         [
             "연결 종목명",
             "종목코드"
@@ -430,11 +464,91 @@ def summarize_connected_news_by_stock(connected_news_df):
 
         latest_news_row = stock_news_df.iloc[0]
 
+        article_scores = pd.to_numeric(
+            stock_news_df["기사 점수"],
+            errors="coerce"
+        ).fillna(0)
+
+        average_article_score = round(
+            float(article_scores.mean()),
+            1
+        )
+
+        highest_article_score = int(
+            article_scores.max()
+        )
+
+        stock_recommendation_score = round(
+            (
+                average_article_score * 0.6
+                + highest_article_score * 0.4
+            ),
+            1
+        )
+
+        news_count_bonus = min(
+            max(
+                len(stock_news_df) - 1,
+                0
+            ) * 3,
+            12
+        )
+
+        stock_recommendation_score = round(
+            min(
+                stock_recommendation_score + news_count_bonus,
+                100
+            ),
+            1
+        )
+
+        positive_reason_list = []
+
+        for reason_text in stock_news_df["긍정 근거"].fillna(""):
+            for reason in str(reason_text).split(","):
+                cleaned_reason = reason.strip()
+
+                if (
+                    cleaned_reason
+                    and cleaned_reason not in positive_reason_list
+                ):
+                    positive_reason_list.append(
+                        cleaned_reason
+                    )
+
+        risk_reason_list = []
+
+        for reason_text in stock_news_df["위험 근거"].fillna(""):
+            for reason in str(reason_text).split(","):
+                cleaned_reason = reason.strip()
+
+                if (
+                    cleaned_reason
+                    and cleaned_reason not in risk_reason_list
+                ):
+                    risk_reason_list.append(
+                        cleaned_reason
+                    )
+
+        representative_positive_reasons = ", ".join(
+            positive_reason_list[:5]
+        )
+
+        representative_risk_reasons = ", ".join(
+            risk_reason_list[:5]
+        )
+
         summary_rows.append(
             {
                 "종목명": stock_name,
                 "종목코드": stock_code,
                 "뉴스 건수": len(stock_news_df),
+                "평균 기사 점수": average_article_score,
+                "최고 기사 점수": highest_article_score,
+                "기사 수 가점": news_count_bonus,
+                "추천 점수": stock_recommendation_score,
+                "대표 긍정 근거": representative_positive_reasons,
+                "대표 위험 근거": representative_risk_reasons,
                 "최근 기사 제목": latest_news_row.get(
                     "제목",
                     ""
@@ -458,10 +572,12 @@ def summarize_connected_news_by_stock(connected_news_df):
 
     summary_df = summary_df.sort_values(
         by=[
+            "추천 점수",
             "뉴스 건수",
             "종목명"
         ],
         ascending=[
+            False,
             False,
             True
         ]
@@ -477,6 +593,214 @@ def summarize_connected_news_by_stock(connected_news_df):
     )
 
     return summary_df
+
+def calculate_auto_news_article_score(
+    news_title,
+    news_source,
+    news_date
+):
+    news_title = str(news_title).strip()
+    news_source = str(news_source).strip()
+
+    score = 20
+    positive_reasons = []
+    risk_reasons = []
+
+    high_value_keywords = {
+        "수주": 18,
+        "계약 체결": 18,
+        "공급 계약": 18,
+        "본계약": 20,
+        "최종 선정": 16,
+        "사업자 선정": 16,
+        "승인": 12,
+        "허가": 12,
+        "투자 확대": 10,
+        "증설": 10,
+        "실적 개선": 10,
+        "흑자 전환": 12,
+        "매출 증가": 8,
+        "영업이익 증가": 10
+    }
+
+    risk_keywords = {
+        "계약 해지": -20,
+        "계약 취소": -20,
+        "수주 취소": -20,
+        "수주 실패": -24,
+        "수주 무산": -24,
+        "수주 불발": -22,
+        "수주 감소": -14,
+        "적자 전환": -16,
+        "실적 악화": -14,
+        "매출 감소": -10,
+        "영업이익 감소": -12,
+        "유상증자": -10,
+        "전환사채": -8,
+        "소송": -8,
+        "제재": -10,
+        "과징금": -10,
+        "생산 중단": -14
+    }
+
+    reliable_sources = [
+        "연합뉴스",
+        "한국경제",
+        "매일경제",
+        "서울경제",
+        "이데일리",
+        "뉴스1",
+        "뉴시스",
+        "전자신문",
+        "조선비즈",
+        "머니투데이"
+    ]
+
+    def select_non_overlapping_keywords(
+        keyword_score_map,
+        target_text
+    ):
+        found_matches = []
+
+        for keyword, keyword_score in keyword_score_map.items():
+            for match in re.finditer(
+                re.escape(keyword),
+                target_text
+            ):
+                found_matches.append(
+                    {
+                        "키워드": keyword,
+                        "점수": keyword_score,
+                        "시작": match.start(),
+                        "끝": match.end()
+                    }
+                )
+
+        found_matches = sorted(
+            found_matches,
+            key=lambda item: (
+                -len(item["키워드"]),
+                -abs(item["점수"]),
+                item["시작"]
+            )
+        )
+
+        selected_matches = []
+
+        for current_match in found_matches:
+            overlaps_existing = any(
+                (
+                    current_match["시작"]
+                    < selected_match["끝"]
+                    and selected_match["시작"]
+                    < current_match["끝"]
+                )
+                for selected_match in selected_matches
+            )
+
+            if not overlaps_existing:
+                selected_matches.append(
+                    current_match
+                )
+
+        return selected_matches
+
+    selected_positive_matches = select_non_overlapping_keywords(
+        high_value_keywords,
+        news_title
+    )
+
+    selected_risk_matches = select_non_overlapping_keywords(
+        risk_keywords,
+        news_title
+    )
+
+    selected_positive_matches = [
+        positive_match
+        for positive_match in selected_positive_matches
+        if not any(
+            (
+                positive_match["시작"] < risk_match["끝"]
+                and risk_match["시작"] < positive_match["끝"]
+            )
+            for risk_match in selected_risk_matches
+        )
+    ]
+
+    strong_negative_order_keywords = {
+        "수주 실패",
+        "수주 무산",
+        "수주 불발",
+        "수주 취소"
+    }
+
+    if any(
+        negative_keyword in news_title
+        for negative_keyword in strong_negative_order_keywords
+    ):
+        selected_positive_matches = [
+            positive_match
+            for positive_match in selected_positive_matches
+            if positive_match["키워드"] != "수주"
+        ]
+
+    for selected_match in selected_positive_matches:
+        score += selected_match["점수"]
+        positive_reasons.append(
+            selected_match["키워드"]
+        )
+
+    for selected_match in selected_risk_matches:
+        score += selected_match["점수"]
+        risk_reasons.append(
+            selected_match["키워드"]
+        )
+
+    if any(
+        source_name in news_source
+        for source_name in reliable_sources
+    ):
+        score += 8
+        positive_reasons.append("주요 언론사")
+
+    parsed_news_date = pd.to_datetime(
+        news_date,
+        errors="coerce",
+        utc=True
+    )
+
+    if pd.notna(parsed_news_date):
+        current_utc_time = pd.Timestamp.now(
+            tz="UTC"
+        )
+
+        news_age_hours = (
+            current_utc_time - parsed_news_date
+        ).total_seconds() / 3600
+
+        if news_age_hours <= 24:
+            score += 12
+            positive_reasons.append("24시간 이내")
+        elif news_age_hours <= 72:
+            score += 7
+            positive_reasons.append("3일 이내")
+        elif news_age_hours <= 168:
+            score += 3
+            positive_reasons.append("7일 이내")
+
+    score = max(
+        0,
+        min(
+            score,
+            100
+        )
+    )
+
+    return {
+        "기사 점수": int(score),
+        "긍정 근거": positive_reasons,
+        "위험 근거": risk_reasons
+    }
 
 @st.cache_data(ttl=3600)
 def load_investor_trading(ticker):
@@ -7122,6 +7446,12 @@ with tab5:
                         "종목명",
                         "종목코드",
                         "뉴스 건수",
+                        "추천 점수",
+                        "평균 기사 점수",
+                        "최고 기사 점수",
+                        "기사 수 가점",
+                        "대표 긍정 근거",
+                        "대표 위험 근거",
                         "최근 기사 제목",
                         "최근 출처",
                         "최근 작성일",
