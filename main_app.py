@@ -384,6 +384,100 @@ def connect_news_to_stocks(news_df):
 
     return connected_df.reset_index(drop=True)
 
+@st.cache_data(ttl=900)
+def summarize_connected_news_by_stock(connected_news_df):
+    if connected_news_df.empty:
+        return pd.DataFrame(
+            columns=[
+                "순위",
+                "종목명",
+                "종목코드",
+                "뉴스 건수",
+                "최근 기사 제목",
+                "최근 출처",
+                "최근 작성일",
+                "최근 링크"
+            ]
+        )
+
+    summary_rows = []
+
+    grouped_news = connected_news_df.groupby(
+        [
+            "연결 종목명",
+            "종목코드"
+        ],
+        dropna=False
+    )
+
+    for (
+        stock_name,
+        stock_code
+    ), stock_news_df in grouped_news:
+        stock_news_df = stock_news_df.copy()
+
+        stock_news_df["작성일_정렬용"] = pd.to_datetime(
+            stock_news_df["작성일"],
+            errors="coerce",
+            utc=True
+        )
+
+        stock_news_df = stock_news_df.sort_values(
+            by="작성일_정렬용",
+            ascending=False,
+            na_position="last"
+        )
+
+        latest_news_row = stock_news_df.iloc[0]
+
+        summary_rows.append(
+            {
+                "종목명": stock_name,
+                "종목코드": stock_code,
+                "뉴스 건수": len(stock_news_df),
+                "최근 기사 제목": latest_news_row.get(
+                    "제목",
+                    ""
+                ),
+                "최근 출처": latest_news_row.get(
+                    "출처",
+                    ""
+                ),
+                "최근 작성일": latest_news_row.get(
+                    "작성일",
+                    ""
+                ),
+                "최근 링크": latest_news_row.get(
+                    "링크",
+                    ""
+                )
+            }
+        )
+
+    summary_df = pd.DataFrame(summary_rows)
+
+    summary_df = summary_df.sort_values(
+        by=[
+            "뉴스 건수",
+            "종목명"
+        ],
+        ascending=[
+            False,
+            True
+        ]
+    ).reset_index(drop=True)
+
+    summary_df.insert(
+        0,
+        "순위",
+        range(
+            1,
+            len(summary_df) + 1
+        )
+    )
+
+    return summary_df
+
 @st.cache_data(ttl=3600)
 def load_investor_trading(ticker):
     empty_result = {
@@ -6952,6 +7046,10 @@ with tab5:
         auto_news_df
     )
 
+    stock_news_summary_df = summarize_connected_news_by_stock(
+        connected_news_df
+    )
+
     if auto_news_df.empty:
         st.warning("자동으로 수집된 뉴스가 없습니다.")
     else:
@@ -7006,6 +7104,28 @@ with tab5:
                         "출처",
                         "작성일",
                         "링크"
+                    ]
+                ],
+                use_container_width=True,
+                hide_index=True
+            )
+
+        st.markdown("### 🏆 종목별 뉴스 언급 순위")
+
+        if stock_news_summary_df.empty:
+            st.info("종목별로 집계할 뉴스가 없습니다.")
+        else:
+            st.dataframe(
+                stock_news_summary_df[
+                    [
+                        "순위",
+                        "종목명",
+                        "종목코드",
+                        "뉴스 건수",
+                        "최근 기사 제목",
+                        "최근 출처",
+                        "최근 작성일",
+                        "최근 링크"
                     ]
                 ],
                 use_container_width=True,
